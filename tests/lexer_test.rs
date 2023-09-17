@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod parser_tests {
     use monkey_interpreter::{lexer::Lexer, token::TokenType};
 
     fn assert_tokens_eq(exp_tokens: &Vec<TokenType>, lex: &mut Lexer, debug: bool) {
