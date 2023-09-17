@@ -29,8 +29,7 @@ impl Parser {
     pub fn parse_program(&mut self) -> Option<Program> {
         let mut program = Program::new();
 
-        while self.cur_token.r#type != TokenType::EOF {
-            println!("parsing... cur_token: {:?}", self.cur_token);
+        while !self.cur_token_is(TokenType::EOF) {
             let stmt = self.parse_statement();
             if let Some(stmt) = stmt {
                 program.statements.push(stmt);
@@ -41,9 +40,12 @@ impl Parser {
     }
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
-        dbg!(&self);
         match self.cur_token.r#type {
             TokenType::LET => self.parse_let_statement(),
+            // TODO: we need better handling of error here
+            // than just panicking, we need to decide whether we want to
+            // return None here, it can possibly conflict with None
+            // that is already being returned from the above parse methods
             _ => panic!("parse statement error"),
         }
     }
@@ -51,7 +53,7 @@ impl Parser {
     pub fn parse_let_statement(&mut self) -> Option<Box<dyn Statement>> {
         let cur_token = self.cur_token.clone();
 
-        if !self.expect_peek(TokenType::IDENT) {
+        if !self.expect_peek_and_advance(TokenType::IDENT) {
             return None;
         }
 
@@ -60,11 +62,12 @@ impl Parser {
             value: self.cur_token.literal.clone(),
         };
 
-        if !self.expect_peek(TokenType::ASSIGN) {
+        if !self.expect_peek_and_advance(TokenType::ASSIGN) {
             return None;
         }
 
         // TODO: skipping expression until we encounter a semicolon
+        // for now, we are providing a dummy expression
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token();
         }
@@ -88,7 +91,7 @@ impl Parser {
         self.peek_token.r#type == token_type
     }
 
-    pub fn expect_peek(&mut self, token_type: TokenType) -> bool {
+    pub fn expect_peek_and_advance(&mut self, token_type: TokenType) -> bool {
         if self.peek_token_is(token_type) {
             self.next_token();
             return true;
