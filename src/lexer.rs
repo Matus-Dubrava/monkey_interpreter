@@ -37,7 +37,7 @@ pub mod lexer {
             self.read_position += 1;
         }
 
-        pub fn move_read_position_one_char_behind(&mut self) {
+        pub fn move_read_position_one_char_back(&mut self) {
             self.position -= 1;
             self.read_position -= 1;
             self.ch = self
@@ -58,7 +58,9 @@ pub mod lexer {
             while self.ch.is_numeric() {
                 self.read_char()
             }
-            return String::from(&self.input[position..self.position]);
+            let result = String::from(&self.input[position..self.position]);
+            self.move_read_position_one_char_back();
+            return result;
         }
 
         pub fn read_identifier(&mut self) -> String {
@@ -66,7 +68,9 @@ pub mod lexer {
             while self.ch.is_alphabetic() || self.ch == '_' {
                 self.read_char()
             }
-            return String::from(&self.input[position..self.position]);
+            let result = String::from(&self.input[position..self.position]);
+            self.move_read_position_one_char_back();
+            return result;
         }
 
         pub fn make_two_char_token(
@@ -123,11 +127,8 @@ pub mod lexer {
                 _ => {
                     if self.ch.is_alphabetic() {
                         let literal = self.read_identifier();
-                        // we are overshooting by one because there is a default read_char call
-                        // at the end of this function and "read_integer" also reads one character ahead
-                        // that is why we need to move the read position back one character
-                        self.move_read_position_one_char_behind();
 
+                        // decide whether token is a known keyword or an identifier
                         if let Some(keyword) = TokenType::get_keyword(&literal) {
                             tok = Token::from_str(keyword, literal);
                         } else {
@@ -135,11 +136,6 @@ pub mod lexer {
                         }
                     } else if self.ch.is_numeric() {
                         let int_literal = self.read_integer();
-                        // we are overshooting by one because there is a default read_char call
-                        // at the end of this function and "read_integer" also reads one character ahead
-                        // that is why we need to move the read position back one character
-                        self.move_read_position_one_char_behind();
-
                         tok = Token::from_str(TokenType::INT, int_literal);
                     } else {
                         tok = Token::from_char(TokenType::ILLEGAL, self.ch);
