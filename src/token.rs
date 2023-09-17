@@ -27,6 +27,8 @@ pub enum TokenType {
     IF,
     ELSE,
     RETURN,
+    EQ,
+    NOTEQ,
 }
 
 impl TokenType {

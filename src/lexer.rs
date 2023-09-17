@@ -67,13 +67,47 @@ pub mod lexer {
             return String::from(&self.input[position..self.position]);
         }
 
+        pub fn check_len_2_token(
+            &mut self,
+            expected_next_ch: char,
+            associated_tokey_type: TokenType,
+        ) -> Option<Token> {
+            let next_ch = self.peek_ahead();
+            let tok: Token;
+
+            if next_ch == expected_next_ch {
+                tok = Token {
+                    r#type: associated_tokey_type,
+                    literal: self.ch.to_string() + &next_ch.to_string(),
+                };
+                self.read_char();
+
+                Some(tok)
+            } else {
+                None
+            }
+        }
+
+        pub fn peek_ahead(&self) -> char {
+            return self.input.chars().nth(self.read_position).unwrap_or('\0');
+        }
+
         pub fn next_token(&mut self) -> Token {
             let tok: Token;
 
             self.skip_whitespace();
 
             match self.ch {
-                '=' => tok = Token::new(TokenType::ASSIGN, self.ch),
+                '=' => {
+                    tok = self
+                        .check_len_2_token('=', TokenType::EQ)
+                        .unwrap_or(Token::new(TokenType::ASSIGN, self.ch))
+                }
+                '!' => {
+                    tok = self
+                        .check_len_2_token('=', TokenType::NOTEQ)
+                        .unwrap_or(Token::new(TokenType::BANG, self.ch))
+                }
                 ';' => tok = Token::new(TokenType::SEMICOLON, self.ch),
                 '(' => tok = Token::new(TokenType::LPAREN, self.ch),
                 ')' => tok = Token::new(TokenType::RPAREN, self.ch),
@@ -83,7 +117,6 @@ pub mod lexer {
                 '}' => tok = Token::new(TokenType::RBRACE, self.ch),
                 '<' => tok = Token::new(TokenType::LT, self.ch),
                 '>' => tok = Token::new(TokenType::GT, self.ch),
-                '!' => tok = Token::new(TokenType::BANG, self.ch),
                 '*' => tok = Token::new(TokenType::ASTERISK, self.ch),
                 '/' => tok = Token::new(TokenType::SLASH, self.ch),
                 '-' => tok = Token::new(TokenType::MINUS, self.ch),

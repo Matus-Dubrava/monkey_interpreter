@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn should_tokenize_input_2() {
         let input = "
-        !=/*5;
+        ! =/*5;
         5 < 10 > 5;
         ";
 
@@ -130,9 +130,34 @@ mod tests {
             TokenType::FALSE,
             TokenType::SEMICOLON,
             TokenType::RBRACE,
+            TokenType::EOF,
         ]);
 
         assert_tokens_eq(&exp_tokens, &mut lex, true);
+    }
+
+    #[test]
+    fn should_tokenize_input_4() {
+        let input = "
+        10 == 10;
+        10 != 9;
+        ";
+
+        let mut lex = Lexer::new(input.to_string())
+            .expect("should be able to instantiate lexer with non-empty input");
+
+        let exp_tokens = Vec::from([
+            TokenType::INT,
+            TokenType::EQ,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+            TokenType::INT,
+            TokenType::NOTEQ,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+        ]);
+
+        assert_tokens_eq(&exp_tokens, &mut lex, false);
     }
 
     #[test]
