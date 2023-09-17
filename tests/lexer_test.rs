@@ -17,110 +17,49 @@ mod tests {
         let mut lex =
             Lexer::new(String::from(input)).expect("expected to be able to instantiate lexer");
 
-        let mut next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LET);
+        let exp_tokens = Vec::from([
+            TokenType::LET,
+            TokenType::IDENT,
+            TokenType::ASSIGN,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+            TokenType::LET,
+            TokenType::IDENT,
+            TokenType::ASSIGN,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+            TokenType::LET,
+            TokenType::IDENT,
+            TokenType::ASSIGN,
+            TokenType::FUNCTION,
+            TokenType::LPAREN,
+            TokenType::IDENT,
+            TokenType::COMMA,
+            TokenType::IDENT,
+            TokenType::RPAREN,
+            TokenType::LBRACE,
+            TokenType::IDENT,
+            TokenType::PLUS,
+            TokenType::IDENT,
+            TokenType::RBRACE,
+            TokenType::SEMICOLON,
+            TokenType::LET,
+            TokenType::IDENT,
+            TokenType::ASSIGN,
+            TokenType::IDENT,
+            TokenType::LPAREN,
+            TokenType::IDENT,
+            TokenType::COMMA,
+            TokenType::IDENT,
+            TokenType::RPAREN,
+            TokenType::SEMICOLON,
+            TokenType::EOF,
+        ]);
 
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::ASSIGN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::INT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::SEMICOLON);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LET);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::ASSIGN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::INT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::SEMICOLON);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LET);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::ASSIGN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::FUNCTION);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LPAREN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::COMMA);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::RPAREN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LBRACE);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::PLUS);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::RBRACE);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::SEMICOLON);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LET);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::ASSIGN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::LPAREN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::COMMA);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::IDENT);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::RPAREN);
-
-        next_token = lex.next_token();
-        assert_eq!(next_token.r#type, TokenType::SEMICOLON);
+        for exp_tok in exp_tokens {
+            let tok = lex.next_token();
+            assert_eq!(exp_tok, tok.r#type);
+        }
     }
 
     #[test]
