@@ -2,6 +2,13 @@
 mod tests {
     use monkey_interpreter::{lexer::lexer::Lexer, token::TokenType};
 
+    fn assert_tokens_eq(exp_tokens: &Vec<TokenType>, lex: &mut Lexer) {
+        for exp_tok in exp_tokens {
+            let tok = lex.next_token();
+            assert_eq!(*exp_tok, tok.r#type);
+        }
+    }
+
     #[test]
     fn should_tokenize_input() {
         let input = "let five = 5;
@@ -56,10 +63,7 @@ mod tests {
             TokenType::EOF,
         ]);
 
-        for exp_tok in exp_tokens {
-            let tok = lex.next_token();
-            assert_eq!(exp_tok, tok.r#type);
-        }
+        assert_tokens_eq(&exp_tokens, &mut lex);
     }
 
     #[test]
@@ -88,10 +92,7 @@ mod tests {
             TokenType::EOF,
         ]);
 
-        for exp_tok in exp_tokens {
-            let tok = lex.next_token();
-            assert_eq!(tok.r#type, exp_tok);
-        }
+        assert_tokens_eq(&exp_tokens, &mut lex);
     }
 
     #[test]
