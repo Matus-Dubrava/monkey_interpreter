@@ -14,6 +14,18 @@ pub trait Expression: Node {
     fn expression_node(&self);
 }
 
+pub struct DummyExpression;
+
+impl Expression for DummyExpression {
+    fn expression_node(&self) {}
+}
+
+impl Node for DummyExpression {
+    fn token_literal(&self) -> String {
+        "dummy literal".to_string()
+    }
+}
+
 pub struct Program {
     pub statements: Vec<Box<dyn Statement>>,
 }
@@ -25,6 +37,14 @@ impl Node for Program {
         } else {
             return "".to_string();
         }
+    }
+}
+
+impl Program {
+    pub fn new() -> Self {
+        let statements: Vec<Box<dyn Statement>> = Vec::new();
+
+        Program { statements }
     }
 }
 
