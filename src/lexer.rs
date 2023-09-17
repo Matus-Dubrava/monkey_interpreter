@@ -72,16 +72,13 @@ pub mod lexer {
         pub fn make_two_char_token(
             &mut self,
             expected_next_ch: char,
-            associated_tokey_type: TokenType,
+            token_type: TokenType,
         ) -> Option<Token> {
             let next_ch = self.peek_ahead();
             let tok: Token;
 
             if next_ch == expected_next_ch {
-                tok = Token::from_str(
-                    associated_tokey_type,
-                    self.ch.to_string() + &next_ch.to_string(),
-                );
+                tok = Token::from_str(token_type, self.ch.to_string() + &next_ch.to_string());
                 self.read_char();
 
                 Some(tok)
