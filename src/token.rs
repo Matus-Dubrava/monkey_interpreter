@@ -53,10 +53,17 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, ch: char) -> Self {
+    pub fn from_char(token_type: TokenType, ch: char) -> Self {
         Token {
             r#type: token_type,
-            literal: String::from(ch),
+            literal: ch.to_string(),
+        }
+    }
+
+    pub fn from_str(token_type: TokenType, s: String) -> Self {
+        Token {
+            r#type: token_type,
+            literal: s,
         }
     }
 }

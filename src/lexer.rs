@@ -76,10 +76,10 @@ pub mod lexer {
             let tok: Token;
 
             if next_ch == expected_next_ch {
-                tok = Token {
-                    r#type: associated_tokey_type,
-                    literal: self.ch.to_string() + &next_ch.to_string(),
-                };
+                tok = Token::from_str(
+                    associated_tokey_type,
+                    self.ch.to_string() + &next_ch.to_string(),
+                );
                 self.read_char();
 
                 Some(tok)
@@ -101,26 +101,26 @@ pub mod lexer {
                 '=' => {
                     tok = self
                         .check_len_2_token('=', TokenType::EQ)
-                        .unwrap_or(Token::new(TokenType::ASSIGN, self.ch))
+                        .unwrap_or(Token::from_char(TokenType::ASSIGN, self.ch))
                 }
                 '!' => {
                     tok = self
                         .check_len_2_token('=', TokenType::NOTEQ)
-                        .unwrap_or(Token::new(TokenType::BANG, self.ch))
+                        .unwrap_or(Token::from_char(TokenType::BANG, self.ch))
                 }
-                ';' => tok = Token::new(TokenType::SEMICOLON, self.ch),
-                '(' => tok = Token::new(TokenType::LPAREN, self.ch),
-                ')' => tok = Token::new(TokenType::RPAREN, self.ch),
-                ',' => tok = Token::new(TokenType::COMMA, self.ch),
-                '+' => tok = Token::new(TokenType::PLUS, self.ch),
-                '{' => tok = Token::new(TokenType::LBRACE, self.ch),
-                '}' => tok = Token::new(TokenType::RBRACE, self.ch),
-                '<' => tok = Token::new(TokenType::LT, self.ch),
-                '>' => tok = Token::new(TokenType::GT, self.ch),
-                '*' => tok = Token::new(TokenType::ASTERISK, self.ch),
-                '/' => tok = Token::new(TokenType::SLASH, self.ch),
-                '-' => tok = Token::new(TokenType::MINUS, self.ch),
-                '\0' => tok = Token::new(TokenType::EOF, self.ch),
+                ';' => tok = Token::from_char(TokenType::SEMICOLON, self.ch),
+                '(' => tok = Token::from_char(TokenType::LPAREN, self.ch),
+                ')' => tok = Token::from_char(TokenType::RPAREN, self.ch),
+                ',' => tok = Token::from_char(TokenType::COMMA, self.ch),
+                '+' => tok = Token::from_char(TokenType::PLUS, self.ch),
+                '{' => tok = Token::from_char(TokenType::LBRACE, self.ch),
+                '}' => tok = Token::from_char(TokenType::RBRACE, self.ch),
+                '<' => tok = Token::from_char(TokenType::LT, self.ch),
+                '>' => tok = Token::from_char(TokenType::GT, self.ch),
+                '*' => tok = Token::from_char(TokenType::ASTERISK, self.ch),
+                '/' => tok = Token::from_char(TokenType::SLASH, self.ch),
+                '-' => tok = Token::from_char(TokenType::MINUS, self.ch),
+                '\0' => tok = Token::from_char(TokenType::EOF, self.ch),
                 _ => {
                     if self.ch.is_alphabetic() {
                         let literal = self.read_identifier();
@@ -130,29 +130,20 @@ pub mod lexer {
                         self.move_read_position_one_char_behind();
 
                         if let Some(keyword) = TokenType::get_keyword(&literal) {
-                            tok = Token {
-                                r#type: keyword,
-                                literal,
-                            };
+                            tok = Token::from_str(keyword, literal);
                         } else {
-                            tok = Token {
-                                r#type: TokenType::IDENT,
-                                literal,
-                            };
+                            tok = Token::from_str(TokenType::IDENT, literal);
                         }
                     } else if self.ch.is_numeric() {
-                        let literal = self.read_integer();
+                        let int_literal = self.read_integer();
                         // we are overshooting by one because there is a default read_char call
                         // at the end of this function and "read_integer" also reads one character ahead
                         // that is why we need to move the read position back one character
                         self.move_read_position_one_char_behind();
 
-                        tok = Token {
-                            r#type: TokenType::INT,
-                            literal,
-                        }
+                        tok = Token::from_str(TokenType::INT, int_literal);
                     } else {
-                        tok = Token::new(TokenType::ILLEGAL, self.ch);
+                        tok = Token::from_char(TokenType::ILLEGAL, self.ch);
                     }
                 }
             }
