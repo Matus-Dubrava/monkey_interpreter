@@ -5,7 +5,7 @@ mod parsers_tests {
     use monkey_interpreter::parser::Parser;
 
     #[test]
-    fn should_parse_input() {
+    fn should_parse_let_statements() {
         let input = "
         let x = 5;
         let y = 10;

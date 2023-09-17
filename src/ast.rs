@@ -2,7 +2,7 @@ use crate::token::Token;
 use std::any::Any;
 
 pub trait Node {
-    fn token_literal(&self) -> String;
+    fn token_literal(&self) -> &str;
 }
 
 pub trait Statement: Node {
@@ -21,8 +21,8 @@ impl Expression for DummyExpression {
 }
 
 impl Node for DummyExpression {
-    fn token_literal(&self) -> String {
-        "dummy literal".to_string()
+    fn token_literal(&self) -> &str {
+        "dummy literal"
     }
 }
 
@@ -31,11 +31,11 @@ pub struct Program {
 }
 
 impl Node for Program {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         if self.statements.len() > 0 {
             return self.statements[0].token_literal();
         } else {
-            return "".to_string();
+            return "";
         }
     }
 }
@@ -58,8 +58,8 @@ impl Expression for Identifier {
 }
 
 impl Node for Identifier {
-    fn token_literal(&self) -> String {
-        return self.token.literal.clone();
+    fn token_literal(&self) -> &str {
+        return &self.token.literal;
     }
 }
 
@@ -78,7 +78,25 @@ impl Statement for LetStatement {
 }
 
 impl Node for LetStatement {
-    fn token_literal(&self) -> String {
-        return self.token.literal.clone();
+    fn token_literal(&self) -> &str {
+        return &self.token.literal;
+    }
+}
+
+pub struct ReturnStatement {
+    token: Token,
+    return_value: Box<dyn Expression>,
+}
+
+impl Statement for ReturnStatement {
+    fn statement_node(&self) {}
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl Node for ReturnStatement {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }

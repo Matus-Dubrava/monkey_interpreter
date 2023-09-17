@@ -50,7 +50,7 @@ impl Parser {
             if let Some(stmt) = stmt {
                 program.statements.push(stmt);
             }
-            self.next_token();
+            self.next_token(); // does this correctly eats semicolons?
         }
 
         Some(program)
