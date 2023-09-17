@@ -11,8 +11,10 @@ pub mod lexer {
 
     impl Lexer {
         pub fn new(input: String) -> Result<Lexer, color_eyre::Report> {
-            let ch = input.chars().nth(0);
-            match ch {
+            // we don't allow to instantiate Lexer with an empty string
+            // that is why we are checking here whether the first character
+            // of the input exists
+            match input.chars().nth(0) {
                 Some(ch) => Ok(Lexer {
                     input,
                     position: 0,
