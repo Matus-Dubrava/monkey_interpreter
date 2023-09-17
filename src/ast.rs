@@ -83,6 +83,12 @@ impl Node for LetStatement {
     }
 }
 
+impl LetStatement {
+    pub fn new(token: Token, name: Identifier, value: Box<dyn Expression>) -> LetStatement {
+        LetStatement { token, name, value }
+    }
+}
+
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Box<dyn Expression>,
@@ -98,5 +104,14 @@ impl Statement for ReturnStatement {
 impl Node for ReturnStatement {
     fn token_literal(&self) -> &str {
         &self.token.literal
+    }
+}
+
+impl ReturnStatement {
+    pub fn new(token: Token, return_value: Box<dyn Expression>) -> ReturnStatement {
+        ReturnStatement {
+            token,
+            return_value,
+        }
     }
 }

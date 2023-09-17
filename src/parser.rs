@@ -73,10 +73,10 @@ impl Parser {
         // for now, returning DummyExpression instead
         self.skip_until_semicolon();
 
-        Some(Box::new(ReturnStatement {
-            token: cur_token,
-            return_value: Box::new(DummyExpression),
-        }))
+        Some(Box::new(ReturnStatement::new(
+            cur_token,
+            Box::new(DummyExpression),
+        )))
     }
 
     pub fn parse_let_statement(&mut self) -> Option<Box<dyn Statement>> {
@@ -101,11 +101,11 @@ impl Parser {
 
         let dummy_expression = Box::new(DummyExpression);
 
-        Some(Box::new(LetStatement {
-            name: identifier,
-            token: cur_token,
-            value: dummy_expression,
-        }))
+        Some(Box::new(LetStatement::new(
+            cur_token,
+            identifier,
+            dummy_expression,
+        )))
     }
 
     pub fn cur_token_is(&self, token_type: TokenType) -> bool {
