@@ -7,18 +7,33 @@ pub struct Parser {
     lex: Lexer,
     cur_token: Token,
     peek_token: Token,
+    errors: Vec<String>,
 }
 
 impl Parser {
     pub fn new(mut lex: Lexer) -> Self {
         let cur_token = lex.next_token();
         let peek_token = lex.next_token();
+        let errors: Vec<String> = Vec::new();
 
         Parser {
             lex,
             cur_token,
             peek_token,
+            errors,
         }
+    }
+
+    pub fn get_errors(&self) -> &Vec<String> {
+        &self.errors
+    }
+
+    pub fn peek_error(&mut self, token_type: TokenType) {
+        let msg = format!(
+            "expected next token to be {:?}, got={:?}",
+            token_type, self.peek_token.r#type
+        );
+        self.errors.push(msg);
     }
 
     pub fn next_token(&mut self) {

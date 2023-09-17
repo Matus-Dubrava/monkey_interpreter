@@ -17,6 +17,7 @@ mod parsers_tests {
 
         let program = parser.parse_program();
         assert!(program.is_some());
+        check_parse_errors(&parser);
 
         let program = program.unwrap();
         assert_eq!(program.statements.len(), 3);
@@ -27,6 +28,21 @@ mod parsers_tests {
             let stmt = &program.statements[i];
             assert!(test_let_statement(stmt, name));
         }
+    }
+
+    fn check_parse_errors(parser: &Parser) {
+        let errors = parser.get_errors();
+        if errors.len() == 0 {
+            return;
+        }
+
+        eprintln!("encoutered {} errors during parsing", errors.len());
+
+        for err in errors {
+            eprintln!("parser error: {}", err);
+        }
+
+        panic!();
     }
 
     fn test_let_statement(stmt: &Box<dyn Statement>, name: &String) -> bool {
@@ -55,7 +71,8 @@ mod parsers_tests {
                 return false;
             }
         } else {
-            eprintln!("statement is not LetStatement.")
+            eprintln!("statement is not LetStatement.");
+            return false;
         }
 
         return true;
