@@ -1,4 +1,4 @@
-use crate::ast::{DummyExpression, Identifier, LetStatement, Program, Statement};
+use crate::ast::{DummyExpression, Identifier, LetStatement, Program, ReturnStatement, Statement};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
@@ -59,8 +59,24 @@ impl Parser {
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
         match self.cur_token.r#type {
             TokenType::LET => self.parse_let_statement(),
+            TokenType::RETURN => self.parse_return_statement(),
             _ => None,
         }
+    }
+
+    pub fn parse_return_statement(&mut self) -> Option<Box<dyn Statement>> {
+        let cur_token = self.cur_token.clone();
+
+        self.next_token();
+
+        // TODO: implement expression parsing
+        // for now, returning DummyExpression instead
+        self.skip_until_semicolon();
+
+        Some(Box::new(ReturnStatement {
+            token: cur_token,
+            return_value: Box::new(DummyExpression),
+        }))
     }
 
     pub fn parse_let_statement(&mut self) -> Option<Box<dyn Statement>> {
@@ -81,9 +97,7 @@ impl Parser {
 
         // TODO: skipping expression until we encounter a semicolon
         // for now, we are providing a dummy expression
-        while !self.cur_token_is(TokenType::SEMICOLON) {
-            self.next_token();
-        }
+        self.skip_until_semicolon();
 
         let dummy_expression = Box::new(DummyExpression);
 
@@ -109,6 +123,12 @@ impl Parser {
         } else {
             self.peek_error(token_type);
             return false;
+        }
+    }
+
+    pub fn skip_until_semicolon(&mut self) {
+        while !self.cur_token_is(TokenType::SEMICOLON) {
+            self.next_token();
         }
     }
 }

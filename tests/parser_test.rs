@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod parsers_tests {
-    use monkey_interpreter::ast::{LetStatement, Node, Statement};
+    use monkey_interpreter::ast::{LetStatement, Node, ReturnStatement, Statement};
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
 
@@ -31,6 +31,23 @@ mod parsers_tests {
     }
 
     #[test]
+    fn should_parse_return_statements() {
+        let input = "
+        return 1;
+        return 10;
+        return 10000;
+        ";
+
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+
+        let program = parser.parse_program().unwrap();
+        assert_eq!(program.statements.len(), 3);
+
+        check_parse_errors(&parser);
+    }
+
+    #[test]
     fn should_record_parsing_errors() {
         let input = "
         let x 5;
@@ -58,6 +75,24 @@ mod parsers_tests {
         }
 
         panic!();
+    }
+
+    fn test_return_statement(stmt: &Box<dyn Statement>) -> bool {
+        if stmt.token_literal() != "let" {
+            eprintln!(
+                "statement's token literal is not 'return', got={}",
+                stmt.token_literal()
+            );
+            return false;
+        }
+
+        let return_statement = stmt.as_any().downcast_ref::<ReturnStatement>();
+        if return_statement.is_none() {
+            eprintln!("statement is not LetStatement.");
+            return false;
+        }
+
+        return true;
     }
 
     fn test_let_statement(stmt: &Box<dyn Statement>, name: &String) -> bool {
