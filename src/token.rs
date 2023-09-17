@@ -16,6 +16,12 @@ pub enum TokenType {
     RBRACE,
     FUNCTION,
     LET,
+    BANG,
+    MINUS,
+    ASTERISK,
+    SLASH,
+    LT,
+    GT,
 }
 
 impl FromStr for TokenType {

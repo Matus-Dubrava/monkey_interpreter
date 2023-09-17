@@ -15,7 +15,7 @@ mod tests {
         ";
 
         let mut lex =
-            Lexer::new(String::from(input)).expect("expected to be able to instantiate lexer");
+            Lexer::new(input.to_string()).expect("expected to be able to instantiate lexer");
 
         let exp_tokens = Vec::from([
             TokenType::LET,
@@ -59,6 +59,38 @@ mod tests {
         for exp_tok in exp_tokens {
             let tok = lex.next_token();
             assert_eq!(exp_tok, tok.r#type);
+        }
+    }
+
+    #[test]
+    fn should_tokenize_input_2() {
+        let input = "
+        !=/*5;
+        5 < 10 > 5;
+        ";
+
+        let mut lex = Lexer::new(input.to_string())
+            .expect("should be able to instantiate lexer with non-empty input");
+
+        let exp_tokens = Vec::from([
+            TokenType::BANG,
+            TokenType::ASSIGN,
+            TokenType::SLASH,
+            TokenType::ASTERISK,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+            TokenType::INT,
+            TokenType::LT,
+            TokenType::INT,
+            TokenType::GT,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+            TokenType::EOF,
+        ]);
+
+        for exp_tok in exp_tokens {
+            let tok = lex.next_token();
+            assert_eq!(tok.r#type, exp_tok);
         }
     }
 

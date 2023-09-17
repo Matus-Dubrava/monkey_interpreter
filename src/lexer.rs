@@ -81,6 +81,12 @@ pub mod lexer {
                 '+' => tok = Token::new(TokenType::PLUS, self.ch),
                 '{' => tok = Token::new(TokenType::LBRACE, self.ch),
                 '}' => tok = Token::new(TokenType::RBRACE, self.ch),
+                '<' => tok = Token::new(TokenType::LT, self.ch),
+                '>' => tok = Token::new(TokenType::GT, self.ch),
+                '!' => tok = Token::new(TokenType::BANG, self.ch),
+                '*' => tok = Token::new(TokenType::ASTERISK, self.ch),
+                '/' => tok = Token::new(TokenType::SLASH, self.ch),
+                '-' => tok = Token::new(TokenType::MINUS, self.ch),
                 '\0' => tok = Token::new(TokenType::EOF, self.ch),
                 _ => {
                     if self.ch.is_alphabetic() {
