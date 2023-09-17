@@ -22,6 +22,11 @@ pub enum TokenType {
     SLASH,
     LT,
     GT,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
+    RETURN,
 }
 
 impl FromStr for TokenType {

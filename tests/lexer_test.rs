@@ -2,8 +2,12 @@
 mod tests {
     use monkey_interpreter::{lexer::lexer::Lexer, token::TokenType};
 
-    fn assert_tokens_eq(exp_tokens: &Vec<TokenType>, lex: &mut Lexer) {
+    fn assert_tokens_eq(exp_tokens: &Vec<TokenType>, lex: &mut Lexer, debug: bool) {
         for exp_tok in exp_tokens {
+            if debug {
+                dbg!(&lex);
+            }
+
             let tok = lex.next_token();
             assert_eq!(*exp_tok, tok.r#type);
         }
@@ -63,7 +67,7 @@ mod tests {
             TokenType::EOF,
         ]);
 
-        assert_tokens_eq(&exp_tokens, &mut lex);
+        assert_tokens_eq(&exp_tokens, &mut lex, false);
     }
 
     #[test]
@@ -92,7 +96,43 @@ mod tests {
             TokenType::EOF,
         ]);
 
-        assert_tokens_eq(&exp_tokens, &mut lex);
+        assert_tokens_eq(&exp_tokens, &mut lex, false);
+    }
+
+    #[test]
+    fn should_tokenize_input_3() {
+        let input = "
+        if (5 < 10) {
+            return true;
+        } else {
+            return false;
+        }
+        ";
+
+        let mut lex = Lexer::new(input.to_string())
+            .expect("should be able to instantiate lexer with non-empty input");
+
+        let exp_tokens = Vec::from([
+            TokenType::IF,
+            TokenType::LPAREN,
+            TokenType::INT,
+            TokenType::LT,
+            TokenType::INT,
+            TokenType::RPAREN,
+            TokenType::LBRACE,
+            TokenType::RETURN,
+            TokenType::TRUE,
+            TokenType::SEMICOLON,
+            TokenType::RBRACE,
+            TokenType::ELSE,
+            TokenType::LBRACE,
+            TokenType::RETURN,
+            TokenType::FALSE,
+            TokenType::SEMICOLON,
+            TokenType::RBRACE,
+        ]);
+
+        assert_tokens_eq(&exp_tokens, &mut lex, true);
     }
 
     #[test]

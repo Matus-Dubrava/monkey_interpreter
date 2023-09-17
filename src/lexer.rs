@@ -109,6 +109,36 @@ pub mod lexer {
                                     literal,
                                 }
                             }
+                            "if" => {
+                                tok = Token {
+                                    r#type: TokenType::IF,
+                                    literal,
+                                }
+                            }
+                            "else" => {
+                                tok = Token {
+                                    r#type: TokenType::ELSE,
+                                    literal,
+                                }
+                            }
+                            "return" => {
+                                tok = Token {
+                                    r#type: TokenType::RETURN,
+                                    literal,
+                                }
+                            }
+                            "true" => {
+                                tok = Token {
+                                    r#type: TokenType::TRUE,
+                                    literal,
+                                }
+                            }
+                            "false" => {
+                                tok = Token {
+                                    r#type: TokenType::FALSE,
+                                    literal,
+                                }
+                            }
                             _ => {
                                 tok = Token {
                                     r#type: TokenType::IDENT,
