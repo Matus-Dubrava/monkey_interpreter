@@ -58,8 +58,12 @@ mod parsers_tests {
         let lex = Lexer::new(&input.to_string());
         let mut parser = Parser::new(lex);
 
-        parser.parse_program();
+        let program = parser.parse_program().unwrap();
         assert_eq!(parser.get_errors().len(), 3);
+
+        for stmt in program.statements {
+            test_return_statement(&stmt);
+        }
     }
 
     fn check_parse_errors(parser: &Parser) {
