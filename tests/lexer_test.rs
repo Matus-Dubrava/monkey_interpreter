@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use monkey_interpreter::{lexer::lexer::Lexer, token::TokenType};
+    use monkey_interpreter::{lexer::Lexer, token::TokenType};
 
     fn assert_tokens_eq(exp_tokens: &Vec<TokenType>, lex: &mut Lexer, debug: bool) {
         for exp_tok in exp_tokens {

@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::lexer::lexer::Lexer;
+use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
 pub fn start_repl() {
