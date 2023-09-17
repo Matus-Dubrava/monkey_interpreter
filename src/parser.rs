@@ -27,6 +27,7 @@ impl Parser {
     }
 
     pub fn parse_program(&mut self) -> Option<Program> {
+        // do we need to return an Option here?
         let mut program = Program::new();
 
         while !self.cur_token_is(TokenType::EOF) {
