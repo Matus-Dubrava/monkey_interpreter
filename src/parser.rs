@@ -50,6 +50,7 @@ impl Parser {
             if let Some(stmt) = stmt {
                 program.statements.push(stmt);
             }
+            self.next_token();
         }
 
         Some(program)
@@ -58,11 +59,7 @@ impl Parser {
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
         match self.cur_token.r#type {
             TokenType::LET => self.parse_let_statement(),
-            // TODO: we need better handling of error here
-            // than just panicking, we need to decide whether we want to
-            // return None here, it can possibly conflict with None
-            // that is already being returned from the above parse methods
-            _ => panic!("parse statement error"),
+            _ => None,
         }
     }
 
@@ -87,8 +84,6 @@ impl Parser {
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token();
         }
-        // eat the semicolon as well
-        self.next_token();
 
         let dummy_expression = Box::new(DummyExpression);
 
@@ -112,6 +107,7 @@ impl Parser {
             self.next_token();
             return true;
         } else {
+            self.peek_error(token_type);
             return false;
         }
     }

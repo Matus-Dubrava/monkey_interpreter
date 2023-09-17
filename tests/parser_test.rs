@@ -30,6 +30,21 @@ mod parsers_tests {
         }
     }
 
+    #[test]
+    fn should_record_parsing_errors() {
+        let input = "
+        let x 5;
+        let = 10;
+        let 12345;
+        ";
+
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+
+        parser.parse_program();
+        assert_eq!(parser.get_errors().len(), 3);
+    }
+
     fn check_parse_errors(parser: &Parser) {
         let errors = parser.get_errors();
         if errors.len() == 0 {
