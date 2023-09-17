@@ -38,6 +38,7 @@ impl Lexer {
             .expect("expected to be able to move one position behind");
     }
 
+    /// skip all whitespaces
     pub fn skip_whitespace(&mut self) {
         while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
             self.read_char();
@@ -64,6 +65,10 @@ impl Lexer {
         return result;
     }
 
+    /// given current character, we provide expected next character
+    /// and corresponding token type to construct new token our of
+    /// if our assumption is correct, otherwise just return none
+    /// signalling that the assumtions wasn't correct
     pub fn make_two_char_token(
         &mut self,
         expected_next_ch: char,
