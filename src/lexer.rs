@@ -67,7 +67,7 @@ pub mod lexer {
             return String::from(&self.input[position..self.position]);
         }
 
-        pub fn check_len_2_token(
+        pub fn make_two_char_token(
             &mut self,
             expected_next_ch: char,
             associated_tokey_type: TokenType,
@@ -100,12 +100,12 @@ pub mod lexer {
             match self.ch {
                 '=' => {
                     tok = self
-                        .check_len_2_token('=', TokenType::EQ)
+                        .make_two_char_token('=', TokenType::EQ)
                         .unwrap_or(Token::from_char(TokenType::ASSIGN, self.ch))
                 }
                 '!' => {
                     tok = self
-                        .check_len_2_token('=', TokenType::NOTEQ)
+                        .make_two_char_token('=', TokenType::NOTEQ)
                         .unwrap_or(Token::from_char(TokenType::BANG, self.ch))
                 }
                 ';' => tok = Token::from_char(TokenType::SEMICOLON, self.ch),
