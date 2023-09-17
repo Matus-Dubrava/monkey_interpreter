@@ -29,16 +29,17 @@ pub enum TokenType {
     RETURN,
 }
 
-impl FromStr for TokenType {
-    type Err = color_eyre::Report;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "let" => Ok(TokenType::LET),
-            "fn" => Ok(TokenType::FUNCTION),
-            _ => Err(color_eyre::eyre::eyre!(
-                "failed to parse string into TokeType"
-            )),
+impl TokenType {
+    pub fn get_keyword(keyword: &String) -> Option<Self> {
+        match keyword.as_str() {
+            "let" => Some(Self::LET),
+            "fn" => Some(Self::FUNCTION),
+            "return" => Some(Self::RETURN),
+            "true" => Some(Self::TRUE),
+            "false" => Some(Self::FALSE),
+            "if" => Some(Self::IF),
+            "else" => Some(Self::ELSE),
+            _ => None,
         }
     }
 }

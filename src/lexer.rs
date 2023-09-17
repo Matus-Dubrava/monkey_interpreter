@@ -96,55 +96,16 @@ pub mod lexer {
                         // that is why we need to move the read position back one character
                         self.move_read_position_one_char_behind();
 
-                        match literal.as_str() {
-                            "let" => {
-                                tok = Token {
-                                    r#type: TokenType::LET,
-                                    literal,
-                                }
-                            }
-                            "fn" => {
-                                tok = Token {
-                                    r#type: TokenType::FUNCTION,
-                                    literal,
-                                }
-                            }
-                            "if" => {
-                                tok = Token {
-                                    r#type: TokenType::IF,
-                                    literal,
-                                }
-                            }
-                            "else" => {
-                                tok = Token {
-                                    r#type: TokenType::ELSE,
-                                    literal,
-                                }
-                            }
-                            "return" => {
-                                tok = Token {
-                                    r#type: TokenType::RETURN,
-                                    literal,
-                                }
-                            }
-                            "true" => {
-                                tok = Token {
-                                    r#type: TokenType::TRUE,
-                                    literal,
-                                }
-                            }
-                            "false" => {
-                                tok = Token {
-                                    r#type: TokenType::FALSE,
-                                    literal,
-                                }
-                            }
-                            _ => {
-                                tok = Token {
-                                    r#type: TokenType::IDENT,
-                                    literal,
-                                }
-                            }
+                        if let Some(keyword) = TokenType::get_keyword(&literal) {
+                            tok = Token {
+                                r#type: keyword,
+                                literal,
+                            };
+                        } else {
+                            tok = Token {
+                                r#type: TokenType::IDENT,
+                                literal,
+                            };
                         }
                     } else if self.ch.is_numeric() {
                         let literal = self.read_integer();
