@@ -25,8 +25,7 @@ mod tests {
         let result = add(five, ten);
         ";
 
-        let mut lex =
-            Lexer::new(input.to_string()).expect("expected to be able to instantiate lexer");
+        let mut lex = Lexer::new(&input.to_string());
 
         let exp_tokens = Vec::from([
             TokenType::LET,
@@ -77,8 +76,7 @@ mod tests {
         5 < 10 > 5;
         ";
 
-        let mut lex = Lexer::new(input.to_string())
-            .expect("should be able to instantiate lexer with non-empty input");
+        let mut lex = Lexer::new(&input.to_string());
 
         let exp_tokens = Vec::from([
             TokenType::BANG,
@@ -109,8 +107,7 @@ mod tests {
         }
         ";
 
-        let mut lex = Lexer::new(input.to_string())
-            .expect("should be able to instantiate lexer with non-empty input");
+        let mut lex = Lexer::new(&input.to_string());
 
         let exp_tokens = Vec::from([
             TokenType::IF,
@@ -143,8 +140,7 @@ mod tests {
         10 != 9;
         ";
 
-        let mut lex = Lexer::new(input.to_string())
-            .expect("should be able to instantiate lexer with non-empty input");
+        let mut lex = Lexer::new(&input.to_string());
 
         let exp_tokens = Vec::from([
             TokenType::INT,
@@ -158,17 +154,5 @@ mod tests {
         ]);
 
         assert_tokens_eq(&exp_tokens, &mut lex, false);
-    }
-
-    #[test]
-    fn should_fail_if_instantiated_with_empty_string() {
-        let input = "";
-
-        let lex = Lexer::new(String::from(input));
-
-        assert!(
-            lex.is_err(),
-            "should fail if instantiated with an empty string"
-        );
     }
 }

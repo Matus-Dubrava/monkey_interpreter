@@ -13,7 +13,7 @@ pub fn start_repl() {
         match std::io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => {
-                let mut lex = Lexer::new(input.clone()).unwrap();
+                let mut lex = Lexer::new(&input);
                 let mut tokens: Vec<Token> = Vec::new();
 
                 loop {
