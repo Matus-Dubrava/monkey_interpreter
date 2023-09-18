@@ -3,6 +3,7 @@ use std::any::Any;
 
 pub trait Node {
     fn token_literal(&self) -> &str;
+    fn to_string(&self) -> String;
 }
 
 pub trait Statement: Node {
@@ -24,6 +25,10 @@ impl Node for DummyExpression {
     fn token_literal(&self) -> &str {
         "dummy literal"
     }
+
+    fn to_string(&self) -> String {
+        "(dummy expression)".to_string()
+    }
 }
 
 pub struct ExpressionStatement {
@@ -43,6 +48,10 @@ impl Node for ExpressionStatement {
     fn token_literal(&self) -> &str {
         &self.token.literal
     }
+
+    fn to_string(&self) -> String {
+        self.expression.to_string()
+    }
 }
 
 pub struct Program {
@@ -55,6 +64,16 @@ impl Node for Program {
             0 => "",
             _ => self.statements[0].token_literal(),
         }
+    }
+
+    fn to_string(&self) -> String {
+        let mut buf = String::new();
+
+        for stmt in &self.statements {
+            buf += &stmt.to_string();
+        }
+
+        buf
     }
 }
 
@@ -79,6 +98,10 @@ impl Node for Identifier {
     fn token_literal(&self) -> &str {
         &self.token.literal
     }
+
+    fn to_string(&self) -> String {
+        self.value.to_string()
+    }
 }
 
 pub struct LetStatement {
@@ -98,6 +121,19 @@ impl Statement for LetStatement {
 impl Node for LetStatement {
     fn token_literal(&self) -> &str {
         &self.token.literal
+    }
+
+    fn to_string(&self) -> String {
+        let mut buf = String::new();
+
+        buf += self.token_literal();
+        buf += " ";
+        buf += &self.name.to_string();
+        buf += " = ";
+        buf += &self.value.to_string();
+        buf += ";";
+
+        buf
     }
 }
 
@@ -122,6 +158,17 @@ impl Statement for ReturnStatement {
 impl Node for ReturnStatement {
     fn token_literal(&self) -> &str {
         &self.token.literal
+    }
+
+    fn to_string(&self) -> String {
+        let mut buf = String::new();
+
+        buf += self.token_literal();
+        buf += " ";
+        buf += &self.return_value.to_string();
+        buf += ";";
+
+        buf
     }
 }
 
