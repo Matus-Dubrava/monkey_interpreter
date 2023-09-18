@@ -26,16 +26,34 @@ impl Node for DummyExpression {
     }
 }
 
+pub struct ExpressionStatement {
+    pub token: Token,
+    pub expression: Box<dyn Expression>,
+}
+
+impl Statement for ExpressionStatement {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn statement_node(&self) {}
+}
+
+impl Node for ExpressionStatement {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+}
+
 pub struct Program {
     pub statements: Vec<Box<dyn Statement>>,
 }
 
 impl Node for Program {
     fn token_literal(&self) -> &str {
-        if self.statements.len() > 0 {
-            return self.statements[0].token_literal();
-        } else {
-            return "";
+        match self.statements.len() {
+            0 => "",
+            _ => self.statements[0].token_literal(),
         }
     }
 }
@@ -59,7 +77,7 @@ impl Expression for Identifier {
 
 impl Node for Identifier {
     fn token_literal(&self) -> &str {
-        return &self.token.literal;
+        &self.token.literal
     }
 }
 
@@ -79,7 +97,7 @@ impl Statement for LetStatement {
 
 impl Node for LetStatement {
     fn token_literal(&self) -> &str {
-        return &self.token.literal;
+        &self.token.literal
     }
 }
 
