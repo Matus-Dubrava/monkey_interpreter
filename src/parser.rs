@@ -1,6 +1,13 @@
-use crate::ast::{DummyExpression, Identifier, LetStatement, Program, ReturnStatement, Statement};
+use std::collections::HashMap;
+
+use crate::ast::{
+    DummyExpression, Expression, Identifier, LetStatement, Program, ReturnStatement, Statement,
+};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
+
+type ParsePrefixFn = fn() -> Box<dyn Expression>;
+type ParseInfixFn = fn(Box<dyn Expression>) -> Box<dyn Expression>;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
