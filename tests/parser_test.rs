@@ -1,8 +1,11 @@
 #[cfg(test)]
 mod parsers_tests {
-    use monkey_interpreter::ast::{LetStatement, Node, ReturnStatement, Statement};
+    use monkey_interpreter::ast::{
+        Identifier, LetStatement, Node, Program, ReturnStatement, Statement,
+    };
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
+    use monkey_interpreter::token::{Token, TokenType};
 
     #[test]
     fn should_parse_let_statements() {
@@ -64,6 +67,32 @@ mod parsers_tests {
         for stmt in program.statements {
             test_return_statement(&stmt);
         }
+    }
+
+    #[test]
+    fn test_to_string_method_manual_let_statement() {
+        let identifier = Identifier {
+            token: Token::from_str(TokenType::IDENT, "my_var".to_string()),
+            value: "my_var".to_string(),
+        };
+
+        let expression = Box::new(Identifier {
+            token: Token::from_str(TokenType::IDENT, "another_var".to_string()),
+            value: "another_var".to_string(),
+        });
+
+        let let_statement = Box::new(LetStatement::new(
+            Token::from_str(TokenType::LET, "let".to_string()),
+            identifier,
+            expression,
+        ));
+
+        let mut statements: Vec<Box<dyn Statement>> = Vec::new();
+        statements.push(let_statement);
+
+        let program = Program { statements };
+
+        assert_eq!(program.to_string(), "let my_var = another_var;");
     }
 
     fn check_parse_errors(parser: &Parser) {
