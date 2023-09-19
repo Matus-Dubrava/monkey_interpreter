@@ -110,7 +110,6 @@ impl Parser {
             }
 
             let expression_statement = ExpressionStatement { expression, token };
-            dbg!(expression_statement.to_string());
             Some(Box::new(expression_statement))
         } else {
             None
@@ -119,9 +118,6 @@ impl Parser {
 
     pub fn parse_expression(&mut self, precedence: u8) -> Option<Box<dyn Expression>> {
         let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
-        dbg!("parsing expression...");
-        dbg!(&self.cur_token);
-        dbg!(prefix_fn);
 
         // if there is prefix function associated with current token
         // execute that function => returns left expression
@@ -134,27 +130,26 @@ impl Parser {
     }
 
     pub fn parse_identifier(&mut self) -> Option<Box<dyn Expression>> {
-        Some(Box::new(Identifier {
-            token: self.cur_token.clone(),
-            value: self.cur_token.literal.clone(),
-        }))
+        Some(Box::new(Identifier::new(
+            self.cur_token.clone(),
+            self.cur_token.literal.clone(),
+        )))
     }
 
     pub fn parse_integer_literal(&mut self) -> Option<Box<dyn Expression>> {
         let value = self.cur_token.literal.parse::<i64>();
 
-        match value.is_err() {
-            true => {
-                self.errors.push(format!(
-                    "could not parse {} as integer",
-                    self.cur_token.literal
-                ));
-                return None;
-            }
-            false => Some(Box::new(IntegerLiteral {
-                token: self.cur_token.clone(),
-                value: value.unwrap(),
-            })),
+        if value.is_err() {
+            self.errors.push(format!(
+                "could not parse {} as integer",
+                self.cur_token.literal
+            ));
+            return None;
+        } else {
+            Some(Box::new(IntegerLiteral::new(
+                self.cur_token.clone(),
+                value.unwrap(),
+            )))
         }
     }
 

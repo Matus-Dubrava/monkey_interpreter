@@ -113,6 +113,12 @@ impl Node for IntegerLiteral {
     }
 }
 
+impl IntegerLiteral {
+    pub fn new(token: Token, value: i64) -> Self {
+        IntegerLiteral { token, value }
+    }
+}
+
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -133,6 +139,12 @@ impl Node for Identifier {
 
     fn to_string(&self) -> String {
         self.value.to_string()
+    }
+}
+
+impl Identifier {
+    pub fn new(token: Token, value: String) -> Self {
+        Identifier { token, value }
     }
 }
 
