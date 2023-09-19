@@ -7,8 +7,8 @@ use crate::ast::{
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
-type PrefixParseFn = fn(&mut Parser) -> Box<dyn Expression>;
-type InfixParseFn = fn(&mut Parser, Box<dyn Expression>) -> Box<dyn Expression>;
+type PrefixParseFn = fn(&mut Parser) -> Option<Box<dyn Expression>>;
+type InfixParseFn = fn(&mut Parser, Box<dyn Expression>) -> Option<Box<dyn Expression>>;
 
 // operator precendeces
 const _: u8 = 0;
@@ -126,41 +126,36 @@ impl Parser {
         // if there is prefix function associated with current token
         // execute that function => returns left expression
         match prefix_fn {
-            Some(fun) => Some(fun(self)),
+            Some(fun) => fun(self),
             None => None,
         }
 
         // TODO: rest
     }
 
-    pub fn parse_identifier(&mut self) -> Box<dyn Expression> {
-        Box::new(Identifier {
+    pub fn parse_identifier(&mut self) -> Option<Box<dyn Expression>> {
+        Some(Box::new(Identifier {
             token: self.cur_token.clone(),
             value: self.cur_token.literal.clone(),
-        })
+        }))
     }
 
-    pub fn parse_integer_literal(&mut self) -> Box<dyn Expression> {
+    pub fn parse_integer_literal(&mut self) -> Option<Box<dyn Expression>> {
         let value = self.cur_token.literal.parse::<i64>();
 
-        if value.is_err() {
-            self.errors.push(format!(
-                "couldn't parse {} as integer",
-                self.cur_token.literal
-            ));
-
-            // NEEDS REFACTOR!!!
-            // we need better error handling here
-            // return an Option<Box<dyn Expression>> instead of
-            // Box<dyn Expression>
-            // WE SHOULD NOT PANIC HERE!!!
-            panic!("failed to parse integer literal from it's string value");
+        match value.is_err() {
+            true => {
+                self.errors.push(format!(
+                    "could not parse {} as integer",
+                    self.cur_token.literal
+                ));
+                return None;
+            }
+            false => Some(Box::new(IntegerLiteral {
+                token: self.cur_token.clone(),
+                value: value.unwrap(),
+            })),
         }
-
-        Box::new(IntegerLiteral {
-            token: self.cur_token.clone(),
-            value: value.unwrap(),
-        })
     }
 
     pub fn parse_return_statement(&mut self) -> Option<Box<dyn Statement>> {
