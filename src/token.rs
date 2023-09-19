@@ -44,6 +44,40 @@ impl TokenType {
     }
 }
 
+impl ToString for TokenType {
+    fn to_string(&self) -> String {
+        match self {
+            TokenType::ILLEGAL => "ILLEGAL".to_string(),
+            TokenType::EOF => "EOF".to_string(),
+            TokenType::IDENT => "IDENT".to_string(),
+            TokenType::INT => "INT".to_string(),
+            TokenType::ASSIGN => "ASSIGN".to_string(),
+            TokenType::PLUS => "PLUS".to_string(),
+            TokenType::COMMA => "COMMA".to_string(),
+            TokenType::SEMICOLON => "SEMICOLON".to_string(),
+            TokenType::LPAREN => "LPAREN".to_string(),
+            TokenType::RPAREN => "RPAREN".to_string(),
+            TokenType::LBRACE => "LBRACE".to_string(),
+            TokenType::RBRACE => "RBRACE".to_string(),
+            TokenType::FUNCTION => "FUNCTION".to_string(),
+            TokenType::LET => "LET".to_string(),
+            TokenType::BANG => "BANG".to_string(),
+            TokenType::MINUS => "MINUS".to_string(),
+            TokenType::ASTERISK => "ASTERISK".to_string(),
+            TokenType::SLASH => "SLASH".to_string(),
+            TokenType::LT => "LT".to_string(),
+            TokenType::GT => "GT".to_string(),
+            TokenType::TRUE => "TRUE".to_string(),
+            TokenType::FALSE => "FALSE".to_string(),
+            TokenType::IF => "IF".to_string(),
+            TokenType::ELSE => "ELSE".to_string(),
+            TokenType::RETURN => "RETURN".to_string(),
+            TokenType::EQ => "EQ".to_string(),
+            TokenType::NOTEQ => "NOTEQ".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Token {
     pub r#type: TokenType,

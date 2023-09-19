@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::ast::{
     DummyExpression, Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement,
-    Node, Program, ReturnStatement, Statement,
+    Node, PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -49,6 +49,8 @@ impl Parser {
 
         parser.register_prefix(TokenType::IDENT, Parser::parse_identifier);
         parser.register_prefix(TokenType::INT, Parser::parse_integer_literal);
+        parser.register_prefix(TokenType::BANG, Parser::parse_prefix_expression);
+        parser.register_prefix(TokenType::MINUS, Parser::parse_prefix_expression);
 
         parser
     }
@@ -94,6 +96,7 @@ impl Parser {
     }
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
+        dbg!(&self.cur_token);
         match self.cur_token.r#type {
             TokenType::LET => self.parse_let_statement(),
             TokenType::RETURN => self.parse_return_statement(),
@@ -122,11 +125,36 @@ impl Parser {
         // if there is prefix function associated with current token
         // execute that function => returns left expression
         match prefix_fn {
-            Some(fun) => fun(self),
-            None => None,
+            Some(fun) => {
+                let left_expr = fun(self);
+                left_expr
+            }
+            None => {
+                self.no_prefix_parse_fn_error(self.cur_token.r#type);
+                None
+            }
         }
 
         // TODO: rest
+    }
+
+    pub fn parse_prefix_expression(&mut self) -> Option<Box<dyn Expression>> {
+        let token = self.cur_token.clone();
+        let operator = self.cur_token.literal.clone();
+
+        self.next_token();
+
+        let right = self.parse_expression(PREFIX);
+
+        if let Some(right) = right {
+            Some(Box::new(PrefixExpression::new(
+                token,
+                operator.as_str(),
+                right,
+            )))
+        } else {
+            None
+        }
     }
 
     pub fn parse_identifier(&mut self) -> Option<Box<dyn Expression>> {
@@ -219,5 +247,13 @@ impl Parser {
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token();
         }
+    }
+
+    pub fn no_prefix_parse_fn_error(&mut self, token_type: TokenType) {
+        let msg = format!(
+            "no prefix parse function found for `{}`",
+            token_type.to_string()
+        );
+        self.errors.push(msg);
     }
 }
