@@ -112,6 +112,8 @@ mod parsers_tests {
             let program = parser.parse_program().unwrap();
             check_parse_errors(&parser);
 
+            dbg!(program.statements[0].to_string());
+
             assert_eq!(
                 program.statements.len(),
                 1,

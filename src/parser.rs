@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::ast::{
-    DummyExpression, Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement,
-    Node, PrefixExpression, Program, ReturnStatement, Statement,
+    DummyExpression, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral,
+    LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -28,6 +28,7 @@ pub struct Parser {
     errors: Vec<String>,
     prefix_parse_fns: HashMap<TokenType, PrefixParseFn>,
     infix_parse_fns: HashMap<TokenType, InfixParseFn>,
+    precedences: HashMap<TokenType, u8>,
 }
 
 impl Parser {
@@ -37,6 +38,7 @@ impl Parser {
         let errors: Vec<String> = Vec::new();
         let prefix_parse_fns: HashMap<TokenType, PrefixParseFn> = HashMap::new();
         let infix_parse_fns: HashMap<TokenType, InfixParseFn> = HashMap::new();
+        let precedences = Parser::initialize_precedences();
 
         let mut parser = Parser {
             lex,
@@ -45,6 +47,7 @@ impl Parser {
             errors,
             prefix_parse_fns,
             infix_parse_fns,
+            precedences,
         };
 
         parser.register_prefix(TokenType::IDENT, Parser::parse_identifier);
@@ -52,7 +55,46 @@ impl Parser {
         parser.register_prefix(TokenType::BANG, Parser::parse_prefix_expression);
         parser.register_prefix(TokenType::MINUS, Parser::parse_prefix_expression);
 
+        parser.register_infix(TokenType::PLUS, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::MINUS, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::SLASH, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::ASTERISK, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::EQ, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::NOTEQ, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::LT, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::GT, Parser::parse_infix_expression);
+
         parser
+    }
+
+    pub fn initialize_precedences() -> HashMap<TokenType, u8> {
+        let mut map: HashMap<TokenType, u8> = HashMap::new();
+        map.insert(TokenType::EQ, EQUALS);
+        map.insert(TokenType::NOTEQ, EQUALS);
+        map.insert(TokenType::LT, LESSGREATER);
+        map.insert(TokenType::GT, LESSGREATER);
+        map.insert(TokenType::PLUS, SUM);
+        map.insert(TokenType::MINUS, SUM);
+        map.insert(TokenType::SLASH, PRODUCT);
+        map.insert(TokenType::ASTERISK, PRODUCT);
+
+        map
+    }
+
+    pub fn peek_precedence(&self) -> u8 {
+        if let Some(prec) = self.precedences.get(&self.peek_token.r#type) {
+            *prec
+        } else {
+            LOWEST
+        }
+    }
+
+    pub fn current_precedence(&self) -> u8 {
+        if let Some(prec) = self.precedences.get(&self.cur_token.r#type) {
+            *prec
+        } else {
+            LOWEST
+        }
     }
 
     pub fn register_prefix(&mut self, token_type: TokenType, fun: PrefixParseFn) {
@@ -119,22 +161,35 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self, precedence: u8) -> Option<Box<dyn Expression>> {
-        let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
+        // This function needs to be refactored
 
-        // if there is prefix function associated with current token
-        // execute that function => returns left expression
-        match prefix_fn {
-            Some(fun) => {
-                let left_expr = fun(self);
-                left_expr
-            }
-            None => {
-                self.no_prefix_parse_fn_error(self.cur_token.r#type);
-                None
-            }
+        let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
+        if prefix_fn.is_none() {
+            return None;
         }
 
-        // TODO: rest
+        let mut left_expr = prefix_fn.unwrap()(self);
+
+        while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
+            // RETHINK THIS!!!
+            // these clone() calls here are because of issues with borrowing
+            // when pulling value from infix_parse_fns and later calling self.next_token()
+            // figure out better way to do this
+            let peek_token_type = self.peek_token.r#type.clone();
+            let infix_parse_fns = self.infix_parse_fns.clone();
+            let infix_fn = infix_parse_fns.get(&peek_token_type);
+
+            if infix_fn.is_none() {
+                return left_expr;
+            }
+
+            let infix_fn = infix_fn.unwrap();
+
+            self.next_token();
+            left_expr = infix_fn(self, left_expr.unwrap());
+        }
+
+        return left_expr;
     }
 
     pub fn parse_prefix_expression(&mut self) -> Option<Box<dyn Expression>> {
@@ -148,6 +203,30 @@ impl Parser {
         if let Some(right) = right {
             Some(Box::new(PrefixExpression::new(
                 token,
+                operator.as_str(),
+                right,
+            )))
+        } else {
+            None
+        }
+    }
+
+    pub fn parse_infix_expression(
+        &mut self,
+        left: Box<dyn Expression>,
+    ) -> Option<Box<dyn Expression>> {
+        let token = self.cur_token.clone();
+        let operator = self.cur_token.literal.clone();
+        let precedence = self.current_precedence();
+
+        self.next_token();
+
+        let right = self.parse_expression(precedence);
+
+        if let Some(right) = right {
+            Some(Box::new(InfixExpression::new(
+                token,
+                left,
                 operator.as_str(),
                 right,
             )))
