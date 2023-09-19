@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod parsers_tests {
     use monkey_interpreter::ast::{
-        Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement, Node,
-        PrefixExpression, Program, ReturnStatement, Statement,
+        Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement,
+        Node, PrefixExpression, Program, ReturnStatement, Statement,
     };
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
@@ -75,58 +75,84 @@ mod parsers_tests {
         }
     }
 
-    // #[test]
-    // fn test_parsing_integer_infix_expressions() {
-    //     struct InfixTest {
-    //         input: String,
-    //         left_value: i64,
-    //         operator: String,
-    //         right_value: i64,
-    //     }
+    #[test]
+    fn test_parsing_integer_infix_expressions() {
+        struct InfixTest {
+            input: String,
+            left_value: i64,
+            operator: String,
+            right_value: i64,
+        }
 
-    //     impl InfixTest {
-    //         fn new(input: &str, left_value: i64, operator: &str, right_value: i64) -> Self {
-    //             InfixTest {
-    //                 input: input.to_string(),
-    //                 left_value,
-    //                 operator: operator.to_string(),
-    //                 right_value,
-    //             }
-    //         }
-    //     }
+        impl InfixTest {
+            fn new(input: &str, left_value: i64, operator: &str, right_value: i64) -> Self {
+                InfixTest {
+                    input: input.to_string(),
+                    left_value,
+                    operator: operator.to_string(),
+                    right_value,
+                }
+            }
+        }
 
-    //     let stmts = Vec::from([
-    //         InfixTest::new("5 + 5", 5, "+", 5),
-    //         InfixTest::new("5 - 5", 5, "-", 5),
-    //         InfixTest::new("5 * 5", 5, "*", 5),
-    //         InfixTest::new("5 / 5", 5, "/", 5),
-    //         InfixTest::new("5 > 5", 5, ">", 5),
-    //         InfixTest::new("5 < 5", 5, "<", 5),
-    //         InfixTest::new("5 == 5", 5, "==", 5),
-    //         InfixTest::new("5 != 5", 5, "!=", 5),
-    //     ]);
+        let test_cases = Vec::from([
+            InfixTest::new("5 + 5", 5, "+", 5),
+            InfixTest::new("5 - 5", 5, "-", 5),
+            InfixTest::new("5 * 5", 5, "*", 5),
+            InfixTest::new("5 / 5", 5, "/", 5),
+            InfixTest::new("5 > 5", 5, ">", 5),
+            InfixTest::new("5 < 5", 5, "<", 5),
+            InfixTest::new("5 == 5", 5, "==", 5),
+            InfixTest::new("5 != 5", 5, "!=", 5),
+        ]);
 
-    //     for stmt in stmts {
-    //         let lex = Lexer::new(&stmt.input);
-    //         let mut parser = Parser::new(lex);
-    //         let program = parser.parse_program().unwrap();
-    //         check_parse_errors(&parser);
+        for test_case in test_cases {
+            let lex = Lexer::new(&test_case.input);
+            let mut parser = Parser::new(lex);
+            let program = parser.parse_program().unwrap();
+            check_parse_errors(&parser);
 
-    //         assert_eq!(
-    //             program.statements.len(),
-    //             1,
-    //             "expected {} statements, got={}",
-    //             1,
-    //             program.statements.len()
-    //         );
+            assert_eq!(
+                program.statements.len(),
+                1,
+                "expected {} statements, got={}",
+                1,
+                program.statements.len()
+            );
 
-    //         let expr_stmt = program.statements[0].as_any().downcast_ref::<ExpressionStatement>();
-    //         assert_eq!(expr_stmt.is_some(), true, "expected statement to be ExpressionStatement");
+            let expr_stmt = program.statements[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>();
 
-    //         let expr_st
-    //         // continue once InfixExpression is implemented
-    //     }
-    // }
+            assert!(
+                expr_stmt.is_some(),
+                "expected statement to be ExpressionStatement"
+            );
+
+            let infix_expr = expr_stmt
+                .unwrap()
+                .expression
+                .as_any()
+                .downcast_ref::<InfixExpression>();
+
+            assert!(
+                infix_expr.is_some(),
+                "expected expression to be InfixExpression"
+            );
+
+            let infix_expr = infix_expr.unwrap();
+
+            test_integer_literal(&infix_expr.left, test_case.left_value);
+
+            assert_eq!(
+                infix_expr.operator, test_case.operator,
+                "expected operator `{}`, got=`{}`",
+                test_case.operator, infix_expr.operator
+            );
+
+            test_integer_literal(&infix_expr.right, test_case.right_value);
+        }
+    }
     #[test]
     fn should_parse_let_statements() {
         let input = "

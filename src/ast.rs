@@ -36,6 +36,52 @@ impl Node for DummyExpression {
     }
 }
 
+pub struct InfixExpression {
+    pub token: Token,
+    pub left: Box<dyn Expression>,
+    pub operator: String,
+    pub right: Box<dyn Expression>,
+}
+
+impl Expression for InfixExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn expression_node(&self) {}
+}
+
+impl Node for InfixExpression {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+
+    fn to_string(&self) -> String {
+        format!(
+            "({} {} {})",
+            self.left.to_string(),
+            self.operator,
+            self.right.to_string()
+        )
+    }
+}
+
+impl InfixExpression {
+    pub fn new(
+        token: Token,
+        left: Box<dyn Expression>,
+        operator: &str,
+        right: Box<dyn Expression>,
+    ) -> Self {
+        InfixExpression {
+            token,
+            left,
+            operator: operator.to_string(),
+            right,
+        }
+    }
+}
+
 pub struct PrefixExpression {
     pub token: Token,
     pub operator: String,

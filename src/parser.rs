@@ -96,7 +96,6 @@ impl Parser {
     }
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
-        dbg!(&self.cur_token);
         match self.cur_token.r#type {
             TokenType::LET => self.parse_let_statement(),
             TokenType::RETURN => self.parse_return_statement(),
