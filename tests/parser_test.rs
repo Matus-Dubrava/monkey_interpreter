@@ -30,7 +30,7 @@ mod parsers_tests {
 
         for (i, name) in tests.iter().enumerate() {
             let stmt = &program.statements[i];
-            assert!(test_let_statement(stmt, name));
+            test_let_statement(stmt, name);
         }
     }
 
@@ -49,6 +49,10 @@ mod parsers_tests {
         assert_eq!(program.statements.len(), 3);
 
         check_parse_errors(&parser);
+
+        for stmt in program.statements {
+            test_return_statement(&stmt);
+        }
     }
 
     #[test]
@@ -145,12 +149,8 @@ mod parsers_tests {
         let lex = Lexer::new(&input.to_string());
         let mut parser = Parser::new(lex);
 
-        let program = parser.parse_program().unwrap();
+        parser.parse_program().unwrap();
         assert_eq!(parser.get_errors().len(), 3);
-
-        for stmt in program.statements {
-            test_return_statement(&stmt);
-        }
     }
 
     #[test]
@@ -174,74 +174,68 @@ mod parsers_tests {
         let mut statements: Vec<Box<dyn Statement>> = Vec::new();
         statements.push(let_statement);
 
-        let program = Program { statements };
-
+        let program = Program::from_statements(statements);
         assert_eq!(program.to_string(), "let my_var = another_var;");
     }
 
     fn check_parse_errors(parser: &Parser) {
         let errors = parser.get_errors();
-        if errors.len() == 0 {
-            return;
-        }
-
-        eprintln!("encoutered {} errors during parsing", errors.len());
 
         for err in errors {
             eprintln!("parser error: {}", err);
         }
 
-        panic!();
+        assert_eq!(
+            errors.len(),
+            0,
+            "encoutered {} errors during parsing",
+            errors.len()
+        );
     }
 
-    fn test_return_statement(stmt: &Box<dyn Statement>) -> bool {
-        if stmt.token_literal() != "let" {
-            eprintln!(
-                "statement's token literal is not 'return', got={}",
-                stmt.token_literal()
-            );
-            return false;
-        }
+    fn test_return_statement(stmt: &Box<dyn Statement>) {
+        assert_eq!(
+            stmt.token_literal(),
+            "return",
+            "statement's token literal is not 'return', got={}",
+            stmt.token_literal()
+        );
 
-        let return_statement = stmt.as_any().downcast_ref::<ReturnStatement>();
-        if return_statement.is_none() {
-            eprintln!("statement is not LetStatement.");
-            return false;
-        }
-
-        return true;
+        let return_stmt = stmt.as_any().downcast_ref::<ReturnStatement>();
+        assert_eq!(
+            return_stmt.is_none(),
+            false,
+            "expected statement to be ReturnStatement"
+        );
     }
 
-    fn test_let_statement(stmt: &Box<dyn Statement>, name: &String) -> bool {
-        if stmt.token_literal() != "let" {
-            eprintln!(
-                "statement's token literal is not 'let', got={}",
-                stmt.token_literal()
-            );
-            return false;
-        }
+    fn test_let_statement(stmt: &Box<dyn Statement>, name: &String) {
+        assert_eq!(
+            stmt.token_literal(),
+            "let",
+            "expected token literal to be `let`, got={}",
+            stmt.token_literal()
+        );
 
-        if let Some(let_stmt) = stmt.as_any().downcast_ref::<LetStatement>() {
-            if &let_stmt.name.value != name {
-                eprintln!(
-                    "let_statement name is not {}, got={}",
-                    name, let_stmt.name.value
-                );
-                return false;
-            }
-            if &let_stmt.name.token_literal() != name {
-                eprintln!(
-                    "statement name is not {}, got={}",
-                    name,
-                    let_stmt.name.token_literal()
-                );
-                return false;
-            }
-        } else {
-            eprintln!("statement is not LetStatement.");
-            return false;
-        }
+        let let_stmt = stmt.as_any().downcast_ref::<LetStatement>();
+        assert_eq!(
+            let_stmt.is_some(),
+            true,
+            "expected statement to be LetStatement"
+        );
 
-        return true;
+        let let_stmt = let_stmt.unwrap();
+        assert_eq!(
+            &let_stmt.name.value, name,
+            "LetStatement name is not {}, got={}",
+            name, let_stmt.name.value
+        );
+        assert_eq!(
+            &let_stmt.name.token_literal(),
+            name,
+            "statement name is not {}, got={}",
+            name,
+            let_stmt.name.token_literal()
+        );
     }
 }

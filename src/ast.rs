@@ -88,6 +88,10 @@ impl Program {
 
         Program { statements }
     }
+
+    pub fn from_statements(statements: Vec<Box<dyn Statement>>) -> Self {
+        Program { statements }
+    }
 }
 
 pub struct IntegerLiteral {
