@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod parsers_tests {
     use monkey_interpreter::ast::{
-        Identifier, LetStatement, Node, Program, ReturnStatement, Statement,
+        ExpressionStatement, Identifier, IntegerLiteral, LetStatement, Node, Program,
+        ReturnStatement, Statement,
     };
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
@@ -48,6 +49,89 @@ mod parsers_tests {
         assert_eq!(program.statements.len(), 3);
 
         check_parse_errors(&parser);
+    }
+
+    #[test]
+    fn should_parse_identifier_expression() {
+        let input = "foobar;".to_string();
+
+        let lex = Lexer::new(&input);
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+        check_parse_errors(&parser);
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "expected one statement to be parsed"
+        );
+
+        let expr_stmt = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>();
+
+        assert_eq!(
+            expr_stmt.is_some(),
+            true,
+            "expected to be able to downcast Statement to ExpressionStatement"
+        );
+
+        let ident = expr_stmt
+            .unwrap()
+            .expression
+            .as_any()
+            .downcast_ref::<Identifier>();
+
+        assert_eq!(
+            ident.is_some(),
+            true,
+            "expected to be able to downcast ExpressionStatement to Identifier"
+        );
+
+        let ident = ident.unwrap();
+        assert_eq!(ident.value, "foobar");
+        assert_eq!(ident.token_literal(), "foobar");
+    }
+
+    #[test]
+    fn should_parse_integer_literal_expression() {
+        let input = "5;".to_string();
+
+        let lex = Lexer::new(&input);
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "expected one statement to be parsed"
+        );
+
+        let expr_stmt = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>();
+
+        assert_eq!(
+            expr_stmt.is_some(),
+            true,
+            "expected to be able to downcast Statement to ExpressionStatement"
+        );
+
+        let integer = expr_stmt
+            .unwrap()
+            .expression
+            .as_any()
+            .downcast_ref::<IntegerLiteral>();
+
+        assert_eq!(
+            integer.is_some(),
+            true,
+            "expected to be able to downcast Statement to ExpressionStatement"
+        );
+
+        let integer = integer.unwrap();
+        assert_eq!(integer.value, 5);
+        assert_eq!(integer.token_literal(), "5");
     }
 
     #[test]

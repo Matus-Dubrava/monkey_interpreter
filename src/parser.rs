@@ -1,13 +1,24 @@
 use std::collections::HashMap;
 
 use crate::ast::{
-    DummyExpression, Expression, Identifier, LetStatement, Program, ReturnStatement, Statement,
+    DummyExpression, Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement,
+    Node, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
-type PrefixParseFn = fn() -> Box<dyn Expression>;
-type InfixParseFn = fn(Box<dyn Expression>) -> Box<dyn Expression>;
+type PrefixParseFn = fn(&mut Parser) -> Box<dyn Expression>;
+type InfixParseFn = fn(&mut Parser, Box<dyn Expression>) -> Box<dyn Expression>;
+
+// operator precendeces
+const _: u8 = 0;
+const LOWEST: u8 = 1;
+const EQUALS: u8 = 2;
+const LESSGREATER: u8 = 3;
+const SUM: u8 = 4;
+const PRODUCT: u8 = 5;
+const PREFIX: u8 = 6;
+const CALL: u8 = 7;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -27,14 +38,19 @@ impl Parser {
         let prefix_parse_fns: HashMap<TokenType, PrefixParseFn> = HashMap::new();
         let infix_parse_fns: HashMap<TokenType, InfixParseFn> = HashMap::new();
 
-        Parser {
+        let mut parser = Parser {
             lex,
             cur_token,
             peek_token,
             errors,
             prefix_parse_fns,
             infix_parse_fns,
-        }
+        };
+
+        parser.register_prefix(TokenType::IDENT, Parser::parse_identifier);
+        parser.register_prefix(TokenType::INT, Parser::parse_integer_literal);
+
+        parser
     }
 
     pub fn register_prefix(&mut self, token_type: TokenType, fun: PrefixParseFn) {
@@ -81,8 +97,70 @@ impl Parser {
         match self.cur_token.r#type {
             TokenType::LET => self.parse_let_statement(),
             TokenType::RETURN => self.parse_return_statement(),
-            _ => None,
+            _ => self.parse_expression_statement(),
         }
+    }
+
+    pub fn parse_expression_statement(&mut self) -> Option<Box<dyn Statement>> {
+        if let Some(expression) = self.parse_expression(LOWEST) {
+            let token = self.cur_token.clone();
+
+            if self.peek_token_is(TokenType::SEMICOLON) {
+                self.next_token();
+            }
+
+            let expression_statement = ExpressionStatement { expression, token };
+            dbg!(expression_statement.to_string());
+            Some(Box::new(expression_statement))
+        } else {
+            None
+        }
+    }
+
+    pub fn parse_expression(&mut self, precedence: u8) -> Option<Box<dyn Expression>> {
+        let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
+        dbg!("parsing expression...");
+        dbg!(&self.cur_token);
+        dbg!(prefix_fn);
+
+        // if there is prefix function associated with current token
+        // execute that function => returns left expression
+        match prefix_fn {
+            Some(fun) => Some(fun(self)),
+            None => None,
+        }
+
+        // TODO: rest
+    }
+
+    pub fn parse_identifier(&mut self) -> Box<dyn Expression> {
+        Box::new(Identifier {
+            token: self.cur_token.clone(),
+            value: self.cur_token.literal.clone(),
+        })
+    }
+
+    pub fn parse_integer_literal(&mut self) -> Box<dyn Expression> {
+        let value = self.cur_token.literal.parse::<i64>();
+
+        if value.is_err() {
+            self.errors.push(format!(
+                "couldn't parse {} as integer",
+                self.cur_token.literal
+            ));
+
+            // NEEDS REFACTOR!!!
+            // we need better error handling here
+            // return an Option<Box<dyn Expression>> instead of
+            // Box<dyn Expression>
+            // WE SHOULD NOT PANIC HERE!!!
+            panic!("failed to parse integer literal from it's string value");
+        }
+
+        Box::new(IntegerLiteral {
+            token: self.cur_token.clone(),
+            value: value.unwrap(),
+        })
     }
 
     pub fn parse_return_statement(&mut self) -> Option<Box<dyn Statement>> {

@@ -13,12 +13,17 @@ pub trait Statement: Node {
 
 pub trait Expression: Node {
     fn expression_node(&self);
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub struct DummyExpression;
 
 impl Expression for DummyExpression {
     fn expression_node(&self) {}
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl Node for DummyExpression {
@@ -85,6 +90,29 @@ impl Program {
     }
 }
 
+pub struct IntegerLiteral {
+    pub token: Token,
+    pub value: i64,
+}
+
+impl Expression for IntegerLiteral {
+    fn expression_node(&self) {}
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl Node for IntegerLiteral {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+
+    fn to_string(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -92,6 +120,10 @@ pub struct Identifier {
 
 impl Expression for Identifier {
     fn expression_node(&self) {}
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl Node for Identifier {
