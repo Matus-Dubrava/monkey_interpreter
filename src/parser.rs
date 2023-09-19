@@ -6,8 +6,8 @@ use crate::ast::{
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
-type ParsePrefixFn = fn() -> Box<dyn Expression>;
-type ParseInfixFn = fn(Box<dyn Expression>) -> Box<dyn Expression>;
+type PrefixParseFn = fn() -> Box<dyn Expression>;
+type InfixParseFn = fn(Box<dyn Expression>) -> Box<dyn Expression>;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -15,6 +15,8 @@ pub struct Parser {
     cur_token: Token,
     peek_token: Token,
     errors: Vec<String>,
+    prefix_parse_fns: HashMap<TokenType, PrefixParseFn>,
+    infix_parse_fns: HashMap<TokenType, InfixParseFn>,
 }
 
 impl Parser {
@@ -22,13 +24,25 @@ impl Parser {
         let cur_token = lex.next_token();
         let peek_token = lex.next_token();
         let errors: Vec<String> = Vec::new();
+        let prefix_parse_fns: HashMap<TokenType, PrefixParseFn> = HashMap::new();
+        let infix_parse_fns: HashMap<TokenType, InfixParseFn> = HashMap::new();
 
         Parser {
             lex,
             cur_token,
             peek_token,
             errors,
+            prefix_parse_fns,
+            infix_parse_fns,
         }
+    }
+
+    pub fn register_prefix(&mut self, token_type: TokenType, fun: PrefixParseFn) {
+        self.prefix_parse_fns.insert(token_type, fun);
+    }
+
+    pub fn register_infix(&mut self, token_type: TokenType, fun: InfixParseFn) {
+        self.infix_parse_fns.insert(token_type, fun);
     }
 
     pub fn get_errors(&self) -> &Vec<String> {
