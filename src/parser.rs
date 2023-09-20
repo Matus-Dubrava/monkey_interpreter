@@ -169,6 +169,8 @@ impl Parser {
         let mut left_expr = prefix_fn.unwrap()(self);
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
+            // do we need to clone this or is there a better way to resolve this
+            // issue with borrowing
             let infix_parse_fns = self.infix_parse_fns.clone();
             if let Some(infix_fn) = infix_parse_fns.get(&self.peek_token.r#type) {
                 self.next_token();
