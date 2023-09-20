@@ -161,8 +161,6 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self, precedence: u8) -> Option<Box<dyn Expression>> {
-        // This function needs to be refactored
-
         let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
         if prefix_fn.is_none() {
             return None;
@@ -171,21 +169,14 @@ impl Parser {
         let mut left_expr = prefix_fn.unwrap()(self);
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
-            // RETHINK THIS!!!
-            // these clone() calls here are because of issues with borrowing
-            // when pulling value from infix_parse_fns and later calling self.next_token()
-            // figure out better way to do this
             let infix_parse_fns = self.infix_parse_fns.clone();
-            let infix_fn = infix_parse_fns.get(&self.peek_token.r#type);
+            if let Some(infix_fn) = infix_parse_fns.get(&self.peek_token.r#type) {
+                self.next_token();
 
-            if infix_fn.is_none() {
+                left_expr = infix_fn(self, left_expr.unwrap());
+            } else {
                 return left_expr;
             }
-
-            let infix_fn = infix_fn.unwrap();
-
-            self.next_token();
-            left_expr = infix_fn(self, left_expr.unwrap());
         }
 
         return left_expr;
