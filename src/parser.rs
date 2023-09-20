@@ -153,7 +153,7 @@ impl Parser {
                 self.next_token();
             }
 
-            let expression_statement = ExpressionStatement { expression, token };
+            let expression_statement = ExpressionStatement::new(token, expression);
             Some(Box::new(expression_statement))
         } else {
             None
@@ -175,9 +175,8 @@ impl Parser {
             // these clone() calls here are because of issues with borrowing
             // when pulling value from infix_parse_fns and later calling self.next_token()
             // figure out better way to do this
-            let peek_token_type = self.peek_token.r#type.clone();
             let infix_parse_fns = self.infix_parse_fns.clone();
-            let infix_fn = infix_parse_fns.get(&peek_token_type);
+            let infix_fn = infix_parse_fns.get(&self.peek_token.r#type);
 
             if infix_fn.is_none() {
                 return left_expr;

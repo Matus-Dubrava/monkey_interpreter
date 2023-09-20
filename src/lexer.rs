@@ -131,6 +131,8 @@ impl Lexer {
                         tok = Token::from_str(TokenType::IDENT, literal);
                     }
                 } else if self.ch.is_numeric() {
+                    // currently we are supporting only integers
+                    // this can be further extended to support floats as well
                     let int_literal = self.read_integer();
                     tok = Token::from_str(TokenType::INT, int_literal);
                 } else {

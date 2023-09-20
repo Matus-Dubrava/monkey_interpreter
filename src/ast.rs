@@ -138,6 +138,12 @@ impl Node for ExpressionStatement {
     }
 }
 
+impl ExpressionStatement {
+    pub fn new(token: Token, expression: Box<dyn Expression>) -> Self {
+        ExpressionStatement { token, expression }
+    }
+}
+
 pub struct Program {
     pub statements: Vec<Box<dyn Statement>>,
 }
