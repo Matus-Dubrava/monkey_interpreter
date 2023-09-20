@@ -161,12 +161,30 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self, precedence: u8) -> Option<Box<dyn Expression>> {
+        dbg!(
+            "[PARSE_EXPRESSION] cur_token: {}",
+            self.cur_token.r#type.to_string()
+        );
+
         let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
         if prefix_fn.is_none() {
+            dbg!(
+                "\t[PARSE_EXPRESSION] prefix parse function for token {}, NOT found",
+                self.cur_token.r#type.to_string()
+            );
             return None;
+        } else {
+            dbg!(
+                "\t[PARSE_EXPRESSION] prefix parse function for token {}, found",
+                self.cur_token.r#type.to_string()
+            );
         }
 
         let mut left_expr = prefix_fn.unwrap()(self);
+        dbg!(
+            "\t[PARSE_EXPRESSION] letf_expr: {}",
+            left_expr.as_ref().unwrap().to_string()
+        );
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
             // do we need to clone this or is there a better way to resolve this
@@ -180,6 +198,10 @@ impl Parser {
                 return left_expr;
             }
         }
+        dbg!(
+            "\t[PARSE_EXPRESSION] parsed expression: {}",
+            left_expr.as_ref().unwrap().to_string()
+        );
 
         return left_expr;
     }

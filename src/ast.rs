@@ -101,7 +101,7 @@ impl Node for PrefixExpression {
     }
 
     fn to_string(&self) -> String {
-        format!("{}({})", self.operator, self.right.to_string()).to_string()
+        format!("({}{})", self.operator, self.right.to_string()).to_string()
     }
 }
 

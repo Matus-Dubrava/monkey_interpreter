@@ -9,6 +9,58 @@ mod parsers_tests {
     use monkey_interpreter::token::{Token, TokenType};
 
     #[test]
+    fn test_operator_precedence_parsing() {
+        struct OperatorPrecedenenceTest {
+            input: String,
+            expected: String,
+        }
+
+        impl OperatorPrecedenenceTest {
+            fn new(input: &str, expected: &str) -> Self {
+                OperatorPrecedenenceTest {
+                    input: input.to_string(),
+                    expected: expected.to_string(),
+                }
+            }
+        }
+
+        let test_cases = Vec::from([
+            OperatorPrecedenenceTest::new("-a * b", "((-a) * b)"),
+            OperatorPrecedenenceTest::new("!-a", "(!(-a))"),
+            OperatorPrecedenenceTest::new("a + b + c", "((a + b) + c)"),
+            OperatorPrecedenenceTest::new("a + b - c", "((a + b) - c)"),
+            OperatorPrecedenenceTest::new("a * b * c", "((a * b) * c)"),
+            OperatorPrecedenenceTest::new("a * b / c", "((a * b) / c)"),
+            OperatorPrecedenenceTest::new("a + b / c", "(a + (b / c))"),
+            OperatorPrecedenenceTest::new(
+                "a + b * c + d / e - f",
+                "(((a + (b * c)) + (d / e)) - f)",
+            ),
+            OperatorPrecedenenceTest::new("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+            OperatorPrecedenenceTest::new("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+            OperatorPrecedenenceTest::new("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+            OperatorPrecedenenceTest::new(
+                "3 + 4 * 5 == 3 * 1 + 4 * 5",
+                "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+            ),
+        ]);
+
+        for test_case in test_cases {
+            let lex = Lexer::new(&test_case.input);
+            let mut parser = Parser::new(lex);
+            let program = parser.parse_program().unwrap();
+            check_parse_errors(&parser);
+
+            let program_string = program.to_string();
+            assert_eq!(
+                program_string, test_case.expected,
+                "expected parsed program string to be {}, got={}",
+                test_case.expected, program_string
+            );
+        }
+    }
+
+    #[test]
     fn test_parsing_integer_prefix_expression() {
         struct PrefixTest {
             input: String,
