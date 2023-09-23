@@ -81,6 +81,7 @@ impl Parser {
         map
     }
 
+    /// returns precedence of next token
     pub fn peek_precedence(&self) -> u8 {
         if let Some(prec) = self.precedences.get(&self.peek_token.r#type) {
             *prec

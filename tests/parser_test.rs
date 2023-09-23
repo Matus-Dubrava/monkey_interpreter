@@ -8,6 +8,8 @@ mod parsers_tests {
     use monkey_interpreter::parser::Parser;
     use monkey_interpreter::token::{Token, TokenType};
 
+    use std::any::Any;
+
     #[test]
     fn test_operator_precedence_parsing() {
         struct OperatorPrecedenenceTest {
@@ -394,6 +396,116 @@ mod parsers_tests {
             "encoutered {} errors during parsing",
             errors.len()
         );
+    }
+
+    fn test_identifier(expression: &Box<dyn Expression>, value: &str) {
+        let ident = expression.as_any().downcast_ref::<Identifier>();
+        assert!(ident.is_some(), "expected Expression to be Identifier");
+        let ident = ident.unwrap();
+        assert_eq!(
+            ident.value, value,
+            "exprected Identifier value to be {}, got={}",
+            value, ident.value
+        );
+        assert_eq!(
+            ident.token_literal(),
+            value,
+            "expected Identifier token literal to be {}, got={}",
+            value,
+            ident.token_literal()
+        );
+    }
+
+    #[test]
+    fn test_test_identifier() {
+        let input = "x;";
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+
+        assert_eq!(program.statements.len(), 1);
+        let expr_stmt = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>();
+        assert!(expr_stmt.is_some(), "Statement is not Expression Statement");
+        test_identifier(&expr_stmt.unwrap().expression, "x");
+    }
+
+    fn test_literal_expression(expression: &Box<dyn Expression>, expected: &Box<dyn Any>) {
+        let exp = expected.downcast_ref::<i32>();
+        if let Some(exp) = exp {
+            test_integer_literal(&expression, *exp as i64);
+        }
+
+        let exp = expected.downcast_ref::<i64>();
+        if let Some(exp) = exp {
+            test_integer_literal(&expression, *exp);
+        }
+
+        let exp = expected.downcast_ref::<String>();
+        if let Some(exp) = exp {
+            test_identifier(&expression, exp);
+        }
+    }
+
+    fn test_infix_expression(
+        expression: &Box<dyn Expression>,
+        left: &Box<dyn Any>,
+        operator: String,
+        right: &Box<dyn Any>,
+    ) {
+        let expr = expression.as_any().downcast_ref::<InfixExpression>();
+        assert!(expr.is_some(), "Expression is not InfixExpression");
+        let expr = expr.unwrap();
+
+        test_literal_expression(&expr.left, &left);
+        assert_eq!(
+            expr.operator, operator,
+            "expected operator `{}`, got={}",
+            operator, expr.operator
+        );
+        test_literal_expression(&expr.right, &right);
+    }
+
+    #[test]
+    fn test_manual_test_infix_expressin() {
+        let left: Box<dyn Expression> = Box::new(IntegerLiteral::new(
+            Token::from_char(TokenType::INT, '5'),
+            5,
+        ));
+        let right: Box<dyn Expression> = Box::new(IntegerLiteral::new(
+            Token::from_char(TokenType::INT, '1'),
+            1,
+        ));
+        let tok = Token::from_str(TokenType::IDENT, "some".to_string());
+        let operator = "+".to_string();
+        let expr: Box<dyn Expression> = Box::new(InfixExpression::new(tok, left, &operator, right));
+
+        let left: Box<dyn Any> = Box::new(IntegerLiteral::new(
+            Token::from_char(TokenType::INT, '5'),
+            5,
+        ));
+        let right: Box<dyn Any> = Box::new(IntegerLiteral::new(
+            Token::from_char(TokenType::INT, '1'),
+            1,
+        ));
+        test_infix_expression(&expr, &left, operator, &right);
+    }
+
+    #[test]
+    fn test_program_test_infix_expression() {
+        let input = "1 + 2";
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+
+        let expr = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>();
+        let expr = &expr.unwrap().expression;
+        let left: Box<dyn Any> = Box::new(1);
+        let right: Box<dyn Any> = Box::new(2);
+        test_infix_expression(&expr, &left, "+".to_string(), &right);
     }
 
     fn test_integer_literal(int_literal: &Box<dyn Expression>, value: i64) {
