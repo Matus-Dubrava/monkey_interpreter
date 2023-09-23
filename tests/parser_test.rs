@@ -271,17 +271,17 @@ mod parsers_tests {
     #[test]
     fn test_to_string_method_manual_let_statement() {
         let identifier = Identifier {
-            token: Token::from_str(TokenType::IDENT, "my_var".to_string()),
+            token: Token::from_str(TokenType::IDENT, "my_var"),
             value: "my_var".to_string(),
         };
 
         let expression = Box::new(Identifier {
-            token: Token::from_str(TokenType::IDENT, "another_var".to_string()),
+            token: Token::from_str(TokenType::IDENT, "another_var"),
             value: "another_var".to_string(),
         });
 
         let let_statement = Box::new(LetStatement::new(
-            Token::from_str(TokenType::LET, "let".to_string()),
+            Token::from_str(TokenType::LET, "let"),
             identifier,
             expression,
         ));

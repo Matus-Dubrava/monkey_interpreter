@@ -78,7 +78,7 @@ impl ToString for TokenType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
     pub r#type: TokenType,
     pub literal: String,
@@ -92,10 +92,10 @@ impl Token {
         }
     }
 
-    pub fn from_str(token_type: TokenType, s: String) -> Self {
+    pub fn from_str(token_type: TokenType, s: &str) -> Self {
         Token {
             r#type: token_type,
-            literal: s,
+            literal: s.to_string(),
         }
     }
 }

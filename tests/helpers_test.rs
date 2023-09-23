@@ -50,15 +50,13 @@ mod helpers_test {
 
     #[test]
     fn test_validate_boolean_helper() {
-        let expr: Box<dyn Expression> = Box::new(Boolean::new(
-            Token::from_str(TokenType::TRUE, "true".to_string()),
-            true,
-        ));
+        let expr: Box<dyn Expression> =
+            Box::new(Boolean::new(Token::from_str(TokenType::TRUE, "true"), true));
 
         validate_boolean_literal(&expr, &true);
 
         let expr: Box<dyn Expression> = Box::new(Boolean::new(
-            Token::from_str(TokenType::FALSE, "false".to_string()),
+            Token::from_str(TokenType::FALSE, "false"),
             false,
         ));
 
@@ -74,10 +72,8 @@ mod helpers_test {
 
     #[test]
     fn test_validate_integer_literal_helper() {
-        let int_literal: Box<dyn Expression> = Box::new(IntegerLiteral::new(
-            Token::from_str(TokenType::INT, "5".to_string()),
-            5,
-        ));
+        let int_literal: Box<dyn Expression> =
+            Box::new(IntegerLiteral::new(Token::from_str(TokenType::INT, "5"), 5));
 
         validate_integer_literal(&int_literal, 5);
     }
