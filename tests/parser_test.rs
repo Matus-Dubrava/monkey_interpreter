@@ -112,35 +112,58 @@ mod parsers_tests {
     }
 
     #[test]
-    fn test_parsing_integer_infix_expressions() {
+    fn test_parsing_infix_expressions() {
         struct InfixTest {
             input: String,
-            left_value: i64,
+            left: Box<dyn Any>,
             operator: String,
-            right_value: i64,
+            right: Box<dyn Any>,
         }
 
         impl InfixTest {
-            fn new(input: &str, left_value: i64, operator: &str, right_value: i64) -> Self {
+            fn new(input: &str, left: Box<dyn Any>, operator: &str, right: Box<dyn Any>) -> Self {
                 InfixTest {
                     input: input.to_string(),
-                    left_value,
+                    left,
                     operator: operator.to_string(),
-                    right_value,
+                    right,
                 }
             }
         }
 
-        let test_cases = Vec::from([
-            InfixTest::new("5 + 5", 5, "+", 5),
-            InfixTest::new("5 - 5", 5, "-", 5),
-            InfixTest::new("5 * 5", 5, "*", 5),
-            InfixTest::new("5 / 5", 5, "/", 5),
-            InfixTest::new("5 > 5", 5, ">", 5),
-            InfixTest::new("5 < 5", 5, "<", 5),
-            InfixTest::new("5 == 5", 5, "==", 5),
-            InfixTest::new("5 != 5", 5, "!=", 5),
-        ]);
+        let mut test_cases: Vec<InfixTest> = Vec::new();
+
+        let left: Box<dyn Any> = Box::new(5);
+        let right: Box<dyn Any> = Box::new(5);
+        test_cases.push(InfixTest::new("5 + 5", left, "+", right));
+
+        let left: Box<dyn Any> = Box::new(5.12);
+        let right: Box<dyn Any> = Box::new(25);
+        test_cases.push(InfixTest::new("5.12 - 25", left, "-", right));
+
+        let left: Box<dyn Any> = Box::new("a");
+        let right: Box<dyn Any> = Box::new(12);
+        test_cases.push(InfixTest::new("a * 12", left, "*", right));
+
+        let left: Box<dyn Any> = Box::new("a");
+        let right: Box<dyn Any> = Box::new("my_var");
+        test_cases.push(InfixTest::new("a / my_var", left, "/", right));
+
+        let left: Box<dyn Any> = Box::new("a");
+        let right: Box<dyn Any> = Box::new(0.1);
+        test_cases.push(InfixTest::new("a > 0.1", left, ">", right));
+
+        let left: Box<dyn Any> = Box::new(true);
+        let right: Box<dyn Any> = Box::new(false);
+        test_cases.push(InfixTest::new("true < false", left, "<", right));
+
+        let left: Box<dyn Any> = Box::new(5.55);
+        let right: Box<dyn Any> = Box::new(false);
+        test_cases.push(InfixTest::new("5.55 == false", left, "==", right));
+
+        let left: Box<dyn Any> = Box::new("AnotherVar");
+        let right: Box<dyn Any> = Box::new("my_var");
+        test_cases.push(InfixTest::new("AnotherVar != my_var", left, "!=", right));
 
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.input.as_str());
@@ -150,15 +173,8 @@ mod parsers_tests {
             validate_program_length(&program, 1);
 
             let expr = get_and_assert_expression(&program.statements[0]);
-            let expected_left_value: Box<dyn Any> = Box::new(test_case.left_value);
-            let expected_right_value: Box<dyn Any> = Box::new(test_case.right_value);
 
-            validate_infix_expression(
-                expr,
-                &expected_left_value,
-                test_case.operator,
-                &expected_right_value,
-            );
+            validate_infix_expression(expr, &test_case.left, test_case.operator, &test_case.right);
 
             assert_eq!(
                 program.to_string(),
