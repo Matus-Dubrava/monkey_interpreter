@@ -90,6 +90,9 @@ mod parsers_tests {
         let right: Box<dyn Any> = Box::new(123.51);
         test_cases.push(PrefixTest::new("-123.51", "-", right));
 
+        let right: Box<dyn Any> = Box::new("my_var");
+        test_cases.push(PrefixTest::new("!my_var", "!", right));
+
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.input.as_str());
             let program = parser.parse_program();

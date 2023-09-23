@@ -206,17 +206,29 @@ pub fn validate_literal_expression(expression: &Box<dyn Expression>, expected: &
         is_known_literal = true;
     }
 
+    let exp = expected.downcast_ref::<bool>();
+    if let Some(exp) = exp {
+        validate_boolean_literal(expression, exp);
+        is_known_literal = true;
+    }
+
+    // Note on why there there are two downcasts for strings.
+    // We are handling both cases when expected value is passed 
+    // either String or &str. Both of these are valid represenations,
+    // and both will be treated as if the caller want to validate
+    // Identifier.
     let exp = expected.downcast_ref::<String>();
     if let Some(exp) = exp {
         validate_identifier(&expression, exp);
         is_known_literal = true;
     }
 
-    let exp = expected.downcast_ref::<bool>();
+    let exp = expected.downcast_ref::<&str>();
     if let Some(exp) = exp {
-        validate_boolean_literal(expression, exp);
+        validate_identifier(&expression, exp);
         is_known_literal = true;
     }
+
 
     assert!(is_known_literal, 
         "Provided literal's type is not known. Received expression=`{}`. This type might not have been registered yet.",
