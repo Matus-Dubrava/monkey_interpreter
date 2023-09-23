@@ -199,14 +199,33 @@ mod parsers_tests {
 
         let lex = Lexer::new(&input.to_string());
         let mut parser = Parser::new(lex);
-
         let program = parser.parse_program().unwrap();
-        assert_eq!(program.statements.len(), 3);
-
+        validate_program_length(&program, 3);
         check_parse_errors(&parser);
 
         for stmt in program.statements {
             validate_return_statement(&stmt);
+        }
+    }
+
+    #[test]
+    fn should_parse_boolean_literals() {
+        let input = "
+        true;
+        false;
+        ";
+
+        let expected_values = Vec::from([true, false]);
+
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+        validate_program_length(&program, 2);
+        check_parse_errors(&parser);
+
+        for (stmt, expected_value) in program.statements.iter().zip(expected_values.iter()) {
+            let expr = get_and_assert_expression(&stmt);
+            validate_boolean_literal(expr, expected_value);
         }
     }
 

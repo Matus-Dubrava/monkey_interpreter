@@ -78,5 +78,12 @@ mod helpers_test {
     }
 
     #[test]
-    fn test_validate_integer_literal_helper() {}
+    fn test_validate_integer_literal_helper() {
+        let int_literal: Box<dyn Expression> = Box::new(IntegerLiteral::new(
+            Token::from_str(TokenType::INT, "5".to_string()),
+            5,
+        ));
+
+        validate_integer_literal(&int_literal, 5);
+    }
 }
