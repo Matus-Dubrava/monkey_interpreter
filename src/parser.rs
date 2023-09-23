@@ -182,6 +182,7 @@ impl Parser {
                 "\t[PARSE_EXPRESSION] prefix parse function for token {}, NOT found",
                 self.cur_token.r#type.to_string()
             );
+            self.no_prefix_parse_fn_error(self.cur_token.r#type);
             return None;
         } else {
             dbg!(

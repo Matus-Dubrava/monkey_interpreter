@@ -45,6 +45,10 @@ mod parsers_tests {
                 "3 + 4 * 5 == 3 * 1 + 4 * 5",
                 "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
             ),
+            OperatorPrecedenenceTest::new("true", "true"),
+            OperatorPrecedenenceTest::new("false", "false"),
+            OperatorPrecedenenceTest::new("3 > 5 == false", "((3 > 5) == false)"),
+            OperatorPrecedenenceTest::new("3 < 5 == true", "((3 < 5) == true)"),
         ]);
 
         for test_case in test_cases {

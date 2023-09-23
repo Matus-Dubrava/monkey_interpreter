@@ -160,7 +160,17 @@ pub fn validate_integer_literal(expr: &Box<dyn Expression>, value: i64) {
     );
 }
 
+
 pub fn validate_float_literal(expr: &Box<dyn Expression>, value: f64) {
+    // Note about validating float literals. Rust doesn't store extra 
+    // 0's after decimal point. Meaning that 0.0, 0.00, 0.000 etc will 
+    // all be turned into 0. Similarly 1.100 is turned into 1.1. When 
+    // dealing with these numbers, first assertion that tests actual value
+    // will pass because both sides are trimmed but the second assertion
+    // will fail because `token_literal` is stored as string during tokenizing
+    // phase and as such is never trimmed while the `expected value` is. 
+    // Either don't test against floats that end with explicit 0's or 
+    // update this function to handle such case.
     let float_literal = get_and_assert_float_literal(&expr);
 
     assert_eq!(
