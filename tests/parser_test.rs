@@ -2,10 +2,9 @@ mod helpers;
 
 #[cfg(test)]
 mod parsers_tests {
-    use monkey_interpreter::ast::{
-        ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, Node,
-        PrefixExpression, Program, Statement,
-    };
+    use std::any::Any;
+
+    use monkey_interpreter::ast::{Identifier, LetStatement, Node, Program, Statement};
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
     use monkey_interpreter::token::{Token, TokenType};
@@ -65,19 +64,19 @@ mod parsers_tests {
     }
 
     #[test]
-    fn test_parsing_integer_prefix_expression() {
+    fn test_parsing_prefix_expression() {
         struct PrefixTest {
             input: String,
             operator: String,
-            int_value: i64,
+            right: i64,
         }
 
         impl PrefixTest {
-            fn new(input: &str, operator: &str, int_value: i64) -> Self {
+            fn new(input: &str, operator: &str, right: i64) -> Self {
                 PrefixTest {
                     input: input.to_string(),
                     operator: operator.to_string(),
-                    int_value,
+                    right,
                 }
             }
         }
@@ -92,42 +91,19 @@ mod parsers_tests {
             let mut parser = Parser::new(lex);
             let program = parser.parse_program().unwrap();
 
-            assert_eq!(
-                program.statements.len(),
-                1,
-                "expected one statement to be parsed"
-            );
+            validate_program_length(&program, 1);
 
-            let expr_stmt = program.statements[0]
-                .as_any()
-                .downcast_ref::<ExpressionStatement>();
+            let expr = get_and_assert_expression(&program.statements[0]);
+            let expected_right_value: Box<dyn Any> = Box::new(test_case.right);
+            validate_prefix_expression(expr, test_case.operator, &expected_right_value);
 
             assert_eq!(
-                expr_stmt.is_some(),
-                true,
-                "expected to be able to downcast Statement to ExpressionStatement"
+                program.to_string(),
+                format!("({})", &test_case.input),
+                "expected program to be `{}`, got=`{}`",
+                format!("({})", &test_case.input),
+                program.to_string()
             );
-
-            let prefix_expr = expr_stmt
-                .unwrap()
-                .expression
-                .as_any()
-                .downcast_ref::<PrefixExpression>();
-
-            assert_eq!(
-                prefix_expr.is_some(),
-                true,
-                "expression is not PrefixExpression"
-            );
-
-            let prefix_expr = prefix_expr.unwrap();
-            assert_eq!(
-                prefix_expr.operator, test_case.operator,
-                "expected operator {}, got={}",
-                test_case.operator, prefix_expr.operator
-            );
-
-            validate_integer_literal(&prefix_expr.right, test_case.int_value);
         }
     }
 
@@ -166,49 +142,28 @@ mod parsers_tests {
             let lex = Lexer::new(&test_case.input);
             let mut parser = Parser::new(lex);
             let program = parser.parse_program().unwrap();
+
             check_parse_errors(&parser);
+            validate_program_length(&program, 1);
 
-            dbg!(program.statements[0].to_string());
+            let expr = get_and_assert_expression(&program.statements[0]);
+            let expected_left_value: Box<dyn Any> = Box::new(test_case.left_value);
+            let expected_right_value: Box<dyn Any> = Box::new(test_case.right_value);
+
+            validate_infix_expression(
+                expr,
+                &expected_left_value,
+                test_case.operator,
+                &expected_right_value,
+            );
 
             assert_eq!(
-                program.statements.len(),
-                1,
-                "expected {} statements, got={}",
-                1,
-                program.statements.len()
-            );
-
-            let expr_stmt = program.statements[0]
-                .as_any()
-                .downcast_ref::<ExpressionStatement>();
-
-            assert!(
-                expr_stmt.is_some(),
-                "expected statement to be ExpressionStatement"
-            );
-
-            let infix_expr = expr_stmt
-                .unwrap()
-                .expression
-                .as_any()
-                .downcast_ref::<InfixExpression>();
-
-            assert!(
-                infix_expr.is_some(),
-                "expected expression to be InfixExpression"
-            );
-
-            let infix_expr = infix_expr.unwrap();
-
-            validate_integer_literal(&infix_expr.left, test_case.left_value);
-
-            assert_eq!(
-                infix_expr.operator, test_case.operator,
-                "expected operator `{}`, got=`{}`",
-                test_case.operator, infix_expr.operator
-            );
-
-            validate_integer_literal(&infix_expr.right, test_case.right_value);
+                program.to_string(),
+                format!("({})", test_case.input),
+                "expected program to be `{}`, got=`{}`",
+                format!("({})", test_case.input),
+                program.to_string()
+            )
         }
     }
     #[test]
@@ -221,13 +176,10 @@ mod parsers_tests {
 
         let lex = Lexer::new(&input.to_string());
         let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
 
-        let program = parser.parse_program();
-        assert!(program.is_some());
         check_parse_errors(&parser);
-
-        let program = program.unwrap();
-        assert_eq!(program.statements.len(), 3);
+        validate_program_length(&program, 3);
 
         let tests = ["x".to_string(), "y".to_string(), "foobar".to_string()];
 
@@ -261,84 +213,31 @@ mod parsers_tests {
     #[test]
     fn should_parse_identifier_expression() {
         let input = "foobar;".to_string();
-
         let lex = Lexer::new(&input);
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
+
         check_parse_errors(&parser);
+        validate_program_length(&program, 1);
 
-        assert_eq!(
-            program.statements.len(),
-            1,
-            "expected one statement to be parsed"
-        );
-
-        let expr_stmt = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>();
-
-        assert_eq!(
-            expr_stmt.is_some(),
-            true,
-            "expected to be able to downcast Statement to ExpressionStatement"
-        );
-
-        let ident = expr_stmt
-            .unwrap()
-            .expression
-            .as_any()
-            .downcast_ref::<Identifier>();
-
-        assert_eq!(
-            ident.is_some(),
-            true,
-            "expected to be able to downcast ExpressionStatement to Identifier"
-        );
-
-        let ident = ident.unwrap();
-        assert_eq!(ident.value, "foobar");
-        assert_eq!(ident.token_literal(), "foobar");
+        let expr = get_and_assert_expression(&program.statements[0]);
+        validate_identifier(&expr, "foobar");
+        assert_eq!(program.to_string(), "foobar");
     }
 
     #[test]
     fn should_parse_integer_literal_expression() {
         let input = "5;".to_string();
-
         let lex = Lexer::new(&input);
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
 
-        assert_eq!(
-            program.statements.len(),
-            1,
-            "expected one statement to be parsed"
-        );
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
 
-        let expr_stmt = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>();
-
-        assert_eq!(
-            expr_stmt.is_some(),
-            true,
-            "expected to be able to downcast Statement to ExpressionStatement"
-        );
-
-        let integer = expr_stmt
-            .unwrap()
-            .expression
-            .as_any()
-            .downcast_ref::<IntegerLiteral>();
-
-        assert_eq!(
-            integer.is_some(),
-            true,
-            "expected to be able to downcast Statement to IntegerLiteral"
-        );
-
-        let integer = integer.unwrap();
-        assert_eq!(integer.value, 5);
-        assert_eq!(integer.token_literal(), "5");
+        let expr = get_and_assert_expression(&program.statements[0]);
+        validate_integer_literal(&expr, 5);
+        assert_eq!(program.to_string(), "5");
     }
 
     #[test]

@@ -21,10 +21,7 @@ mod helpers_test {
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
 
-        let expr = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>();
-        let expr = &expr.unwrap().expression;
+        let expr = get_and_assert_expression(&program.statements[0]);
         let left: Box<dyn Any> = Box::new(1);
         let right: Box<dyn Any> = Box::new(2);
         validate_infix_expression(&expr, &left, "+".to_string(), &right);
@@ -35,21 +32,12 @@ mod helpers_test {
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
 
-        let expr = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>()
-            .unwrap();
-
-        let infix_expr = expr.expression.as_any().downcast_ref::<InfixExpression>();
-        assert!(
-            infix_expr.is_some(),
-            "expected expression {} to be InfixExpression",
-            expr.to_string()
-        );
+        let expr = get_and_assert_expression(&program.statements[0]);
+        get_and_assert_infix_expression(&expr);
 
         let left: Box<dyn Any> = Box::new(true);
         let right: Box<dyn Any> = Box::new(false);
-        validate_infix_expression(&expr.expression, &left, "+".to_string(), &right)
+        validate_infix_expression(&expr, &left, "+".to_string(), &right)
     }
 
     #[test]
@@ -60,11 +48,8 @@ mod helpers_test {
         let program = parser.parse_program().unwrap();
 
         assert_eq!(program.statements.len(), 1);
-        let expr_stmt = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>();
-        assert!(expr_stmt.is_some(), "Statement is not Expression Statement");
-        validate_identifier(&expr_stmt.unwrap().expression, "x");
+        let expr = get_and_assert_expression(&program.statements[0]);
+        validate_identifier(&expr, "x");
     }
 
     #[test]
@@ -88,11 +73,10 @@ mod helpers_test {
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
 
-        let expr = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>()
-            .unwrap();
-
-        validate_boolean_literal(&expr.expression, &true);
+        let expr = get_and_assert_expression(&program.statements[0]);
+        validate_boolean_literal(&expr, &true);
     }
+
+    #[test]
+    fn test_validate_integer_literal_helper() {}
 }
