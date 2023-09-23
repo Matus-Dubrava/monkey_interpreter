@@ -66,11 +66,11 @@ mod parsers_tests {
         struct PrefixTest {
             input: String,
             operator: String,
-            right: i64,
+            right: Box<dyn Any>,
         }
 
         impl PrefixTest {
-            fn new(input: &str, operator: &str, right: i64) -> Self {
+            fn new(input: &str, operator: &str, right: Box<dyn Any>) -> Self {
                 PrefixTest {
                     input: input.to_string(),
                     operator: operator.to_string(),
@@ -79,10 +79,16 @@ mod parsers_tests {
             }
         }
 
-        let test_cases = Vec::from([
-            PrefixTest::new("!5", "!", 5),
-            PrefixTest::new("-15", "-", 15),
-        ]);
+        let mut test_cases: Vec<PrefixTest> = Vec::new();
+
+        let right: Box<dyn Any> = Box::new(5);
+        test_cases.push(PrefixTest::new("!5", "!", right));
+
+        let right: Box<dyn Any> = Box::new(5);
+        test_cases.push(PrefixTest::new("-5", "-", right));
+
+        let right: Box<dyn Any> = Box::new(123.51);
+        test_cases.push(PrefixTest::new("-123.51", "-", right));
 
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.input.as_str());
@@ -90,8 +96,7 @@ mod parsers_tests {
             validate_program_length(&program, 1);
 
             let expr = get_and_assert_expression(&program.statements[0]);
-            let expected_right_value: Box<dyn Any> = Box::new(test_case.right);
-            validate_prefix_expression(expr, test_case.operator, &expected_right_value);
+            validate_prefix_expression(expr, test_case.operator, &test_case.right);
 
             assert_eq!(
                 program.to_string(),

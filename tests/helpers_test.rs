@@ -73,9 +73,23 @@ mod helpers_test {
 
     #[test]
     fn test_validate_integer_literal_helper() {
-        let int_literal: Box<dyn Expression> =
-            Box::new(IntegerLiteral::new(Token::from_str(TokenType::INT, "5"), 5));
+        let value = 12345;
+        let int_literal: Box<dyn Expression> = Box::new(IntegerLiteral::new(
+            Token::from_str(TokenType::INT, &value.to_string()),
+            value,
+        ));
 
-        validate_integer_literal(&int_literal, 5);
+        validate_integer_literal(&int_literal, value);
+    }
+
+    #[test]
+    fn test_validate_float_literal_helper() {
+        let value = 592.123;
+        let float_literal: Box<dyn Expression> = Box::new(FloatLiteral::new(
+            Token::from_str(TokenType::FLOAT, &value.to_string()),
+            value,
+        ));
+
+        validate_float_literal(&float_literal, value);
     }
 }

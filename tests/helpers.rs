@@ -58,6 +58,15 @@ pub fn get_and_assert_integer_literal(expr: &Box<dyn Expression>) -> &IntegerLit
     return int_literal.unwrap();
 }
 
+pub fn get_and_assert_float_literal(expr: &Box<dyn Expression>) -> &FloatLiteral {
+    let float_literal = expr.as_any().downcast_ref::<FloatLiteral>();
+    assert!(
+        float_literal.is_some(),
+        "expected expression to be FloatLiteral"
+    );
+    return float_literal.unwrap();
+}
+
 pub fn get_and_assert_let_statement(stmt: &Box<dyn Statement>) -> &LetStatement {
     let let_stmt = stmt.as_any().downcast_ref::<LetStatement>();
     assert!(let_stmt.is_some(), "expected expression to be LetStatement");
@@ -128,7 +137,7 @@ pub fn validate_return_statement(stmt: &Box<dyn Statement>) {
     assert_eq!(
         stmt.token_literal(),
         "return",
-        "statement's token literal is not 'return', got={}",
+        "statement's token literal is not 'return', got=`{}`",
         stmt.token_literal()
     );
 }
@@ -138,41 +147,81 @@ pub fn validate_integer_literal(expr: &Box<dyn Expression>, value: i64) {
 
     assert_eq!(
         int_literal.value, value,
-        "expected value to be {}, got={}",
+        "expected value to be `{}`, got=`{}`",
         int_literal.value, value
     );
 
     assert_eq!(
         int_literal.token_literal(),
         value.to_string(),
-        "expected token literal to be {}, got={}",
+        "expected token literal to be `{}`, got=`{}`",
         int_literal.token_literal(),
         value.to_string()
     );
 }
 
+pub fn validate_float_literal(expr: &Box<dyn Expression>, value: f64) {
+    let float_literal = get_and_assert_float_literal(&expr);
+
+    assert_eq!(
+        float_literal.value, value,
+        "expected value to be `{}`, got=`{}`",
+        value, float_literal.value
+    );
+
+    assert_eq!(
+        float_literal.token_literal(),
+        value.to_string(),
+        "exected token literal to be `{}`, got=`{}`",
+        value.to_string(),
+        float_literal.token_literal()
+    );
+}
+
+/// Validates any type of literal by trying to cast the 
+/// expected value into any known type and calls appropriate
+/// valudation function assocaited with that concrete type.
+/// If this process can't cast the expected value into any
+/// know type, it panics.
+/// Note: any new literal type needs to be registered here
+/// before it can be tested in prefix/infix expressions tests.
 pub fn validate_literal_expression(expression: &Box<dyn Expression>, expected: &Box<dyn Any>) {
-    // each literal needs to be registered here before we can
-    // test it in infix expression
+    let mut is_known_literal = false;
+
     let exp = expected.downcast_ref::<i32>();
     if let Some(exp) = exp {
         validate_integer_literal(&expression, *exp as i64);
+        is_known_literal = true;
     }
 
     let exp = expected.downcast_ref::<i64>();
     if let Some(exp) = exp {
         validate_integer_literal(&expression, *exp);
+        is_known_literal = true;
+    }
+
+    let exp = expected.downcast_ref::<f64>();
+    if let Some(exp) = exp {
+        validate_float_literal(&expression, *exp);
+        is_known_literal = true;
     }
 
     let exp = expected.downcast_ref::<String>();
     if let Some(exp) = exp {
         validate_identifier(&expression, exp);
+        is_known_literal = true;
     }
 
     let exp = expected.downcast_ref::<bool>();
     if let Some(exp) = exp {
         validate_boolean_literal(expression, exp);
+        is_known_literal = true;
     }
+
+    assert!(is_known_literal, 
+        "Provided literal's type is not known. Received expression=`{}`. This type might not have been registered yet.",
+        expression.to_string()
+    );
 }
 
 pub fn validate_boolean_literal(expr: &Box<dyn Expression>, value: &bool) {
