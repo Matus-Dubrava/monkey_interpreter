@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use crate::ast::{
-    Boolean, DummyExpression, Expression, ExpressionStatement, FloatLiteral, Identifier,
-    InfixExpression, IntegerLiteral, LetStatement, Node, PrefixExpression, Program,
-    ReturnStatement, Statement,
+    BlockStatement, Boolean, DummyExpression, Expression, ExpressionStatement, FloatLiteral,
+    Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, Node,
+    PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -60,6 +60,7 @@ impl Parser {
         parser.register_prefix(TokenType::FALSE, Parser::parse_boolean);
         parser.register_prefix(TokenType::FLOAT, Parser::parse_float_literal);
         parser.register_prefix(TokenType::LPAREN, Parser::parse_grouped_expressions);
+        parser.register_prefix(TokenType::IF, Parser::parse_if_expression);
 
         parser.register_infix(TokenType::PLUS, Parser::parse_infix_expression);
         parser.register_infix(TokenType::MINUS, Parser::parse_infix_expression);
@@ -255,6 +256,118 @@ impl Parser {
         } else {
             None
         }
+    }
+
+    // Parse `if else` expression, `else` is optional.
+    // `if else` is treated as expression which means that it evaluates
+    //
+    // Currently supported form of `if` expression is:
+    //      if (expr) { stmts... } else { stmts... };
+    //
+    // to value of the last expression found in the executed block statement.
+    // Currently, braces around condition `if (x == y) ...` are required,
+    // this can be changed in this function.
+    // TODO: implement support for `else if`, resp. support for multiple
+    // alternatives.
+    pub fn parse_if_expression(&mut self) -> Option<Box<dyn Expression>> {
+        let cur_token = self.cur_token.clone();
+
+        // advance to the next token which should be `(`
+        // signifying start of the condition
+        if !self.expect_peek_and_advance(TokenType::LPAREN) {
+            self.errors.push("missing `(` after `if`".to_string());
+            return None;
+        }
+
+        // advance to next token which should be the actual start of condition
+        self.next_token();
+        let condition = self.parse_expression(LOWEST);
+        if condition.is_none() {
+            self.errors.push("missing `if`'s condition".to_string());
+            return None;
+        }
+
+        // advance to the next token which should be `)`
+        // signifying end of the condition
+        if !self.expect_peek_and_advance(TokenType::RPAREN) {
+            self.errors
+                .push("missing closing `)` in `if`'s condition".to_string());
+            return None;
+        }
+
+        // advance to the next token which should be `{`
+        // signifying start of the `consequence` block statement
+        if !self.expect_peek_and_advance(TokenType::LBRACE) {
+            self.errors
+                .push("missing `{` after `if`'s condition".to_string());
+            return None;
+        }
+
+        let consequence = self.parse_block_statement();
+        // empty block statements are not allowed
+        if condition.is_none() {
+            self.errors.push("`if`'s consequence block".to_string());
+            return None;
+        }
+
+        // check whether there is optional `else` following `consequence`
+        if !self.peek_token_is(TokenType::ELSE) {
+            return Some(Box::new(IfExpression::new(
+                cur_token,
+                condition.unwrap(),
+                consequence.unwrap(),
+                None,
+            )));
+        } else {
+            // next token is `else` advance to it
+            self.next_token();
+
+            // next token following `else` should be `{`
+            // signifying start of the `alternative` block statement
+            if !self.expect_peek_and_advance(TokenType::LBRACE) {
+                self.errors
+                    .push("missing `{` after `else` denoting start of block statement".to_string());
+                return None;
+            }
+
+            let alternative = self.parse_block_statement();
+
+            if alternative.is_none() {
+                self.errors.push("`if`'s consequence block".to_string());
+                return None;
+            }
+
+            return Some(Box::new(IfExpression::new(
+                cur_token,
+                condition.unwrap(),
+                consequence.unwrap(),
+                alternative,
+            )));
+        }
+    }
+
+    pub fn parse_block_statement(&mut self) -> Option<BlockStatement> {
+        let cur_token = self.cur_token.clone(); // storing `{` token
+        let mut block_statements: Vec<Box<dyn Statement>> = Vec::new();
+
+        // advance to the next token after `{` to start parsing statements
+        self.next_token();
+
+        while !self.cur_token_is(TokenType::RBRACE) && !self.cur_token_is(TokenType::EOF) {
+            let stmt = self.parse_statement();
+
+            if stmt.is_some() {
+                block_statements.push(stmt.unwrap());
+            }
+            self.next_token();
+        }
+
+        if block_statements.len() == 0 {
+            self.errors.push("empty block statement".to_string());
+            return None;
+        }
+
+        Some(BlockStatement::new(cur_token, block_statements))
     }
 
     pub fn parse_boolean(&mut self) -> Option<Box<dyn Expression>> {

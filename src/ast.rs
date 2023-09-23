@@ -1,4 +1,4 @@
-use crate::token::Token;
+use crate::token::{self, Token};
 use std::any::Any;
 
 pub trait Node {
@@ -341,6 +341,86 @@ impl ReturnStatement {
         ReturnStatement {
             token,
             return_value,
+        }
+    }
+}
+
+pub struct BlockStatement {
+    pub token: Token, // the `{` token since this is the token that denotes start of the block expression
+    pub statements: Vec<Box<dyn Statement>>,
+}
+
+impl Statement for BlockStatement {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn statement_node(&self) {}
+}
+
+impl Node for BlockStatement {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+    fn to_string(&self) -> String {
+        let mut s = String::new();
+        for stmt in &self.statements {
+            s += &stmt.to_string();
+        }
+        return s;
+    }
+}
+
+impl BlockStatement {
+    pub fn new(token: Token, statements: Vec<Box<dyn Statement>>) -> Self {
+        BlockStatement { token, statements }
+    }
+}
+
+pub struct IfExpression {
+    pub token: Token, // the `if` token
+    pub condition: Box<dyn Expression>,
+    pub consequence: BlockStatement,
+    pub alternative: Option<BlockStatement>,
+}
+
+impl Expression for IfExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn expression_node(&self) {}
+}
+
+impl Node for IfExpression {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+    fn to_string(&self) -> String {
+        let mut s = String::from(format!(
+            "if {} {}",
+            self.condition.to_string(),
+            self.consequence.to_string(),
+        ));
+
+        if self.alternative.is_some() {
+            s += format!("else {}", self.alternative.as_ref().unwrap().to_string()).as_str();
+        }
+
+        return s;
+    }
+}
+
+impl IfExpression {
+    pub fn new(
+        token: Token,
+        condition: Box<dyn Expression>,
+        consequence: BlockStatement,
+        alternative: Option<BlockStatement>,
+    ) -> Self {
+        IfExpression {
+            token,
+            condition,
+            consequence,
+            alternative,
         }
     }
 }

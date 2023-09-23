@@ -82,6 +82,12 @@ pub fn get_and_assert_return_statement(stmt: &Box<dyn Statement>) -> &ReturnStat
     return return_stmt.unwrap();
 }
 
+pub fn get_and_assert_if_expression(expr: &Box<dyn Expression>) -> &IfExpression {
+    let if_expr = expr.as_any().downcast_ref::<IfExpression>();
+    assert!(if_expr.is_some(), "expected expression to be IfExpression");
+    return if_expr.unwrap();
+}
+
 pub fn check_parse_errors(parser: &Parser) {
     let errors = parser.get_errors();
 

@@ -194,6 +194,81 @@ mod parsers_tests {
             )
         }
     }
+
+    #[test]
+    fn should_parse_if_expression() {
+        let input = "if (x < y) { x + 1 };";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let if_expr = get_and_assert_if_expression(expr);
+
+        let left: Box<dyn Any> = Box::new("x");
+        let right: Box<dyn Any> = Box::new("y");
+        validate_infix_expression(&if_expr.condition, &left, "<".to_string(), &right);
+
+        assert_eq!(
+            if_expr.consequence.statements.len(),
+            1,
+            "expected `{}` consequence statements, got=`{}`",
+            1,
+            if_expr.consequence.statements.len()
+        );
+
+        let expr = get_and_assert_expression(&if_expr.consequence.statements[0]);
+        get_and_assert_infix_expression(expr);
+
+        let left: Box<dyn Any> = Box::new("x");
+        let right: Box<dyn Any> = Box::new(1);
+        validate_infix_expression(&expr, &left, "+".to_string(), &right);
+
+        assert!(
+            if_expr.alternative.is_none(),
+            "expected `if expression`'s alternative to be none, got=`{}`",
+            if_expr.alternative.as_ref().unwrap().to_string()
+        );
+    }
+
+    #[test]
+    fn should_parse_if_else_expression() {
+        let input = "if (x < y) { x + 1 } else { 1 };";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let if_expr = get_and_assert_if_expression(expr);
+
+        let left: Box<dyn Any> = Box::new("x");
+        let right: Box<dyn Any> = Box::new("y");
+        validate_infix_expression(&if_expr.condition, &left, "<".to_string(), &right);
+
+        assert_eq!(if_expr.consequence.statements.len(), 1);
+
+        let expr = get_and_assert_expression(&if_expr.consequence.statements[0]);
+        get_and_assert_infix_expression(expr);
+
+        let left: Box<dyn Any> = Box::new("x");
+        let right: Box<dyn Any> = Box::new(1);
+        validate_infix_expression(&expr, &left, "+".to_string(), &right);
+
+        assert!(
+            if_expr.alternative.is_some(),
+            "expected `if expression`'s alternative to be not none"
+        );
+        let alternative = if_expr.alternative.as_ref().unwrap();
+
+        assert_eq!(alternative.statements.len(), 1);
+
+        let expr = get_and_assert_expression(&alternative.statements[0]);
+        get_and_assert_integer_literal(expr);
+        validate_integer_literal(expr, 1);
+    }
+
     #[test]
     fn should_parse_let_statements() {
         let input = "
