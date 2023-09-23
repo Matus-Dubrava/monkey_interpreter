@@ -104,7 +104,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn should_tokenize_input_3() {
+    fn should_tokenize_should_tokenize_if_else_statement() {
         let input = "
         if (5 < 10) {
             return true;
@@ -141,7 +141,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn should_tokenize_input_4() {
+    fn should_tokenize_equals_and_not_equals() {
         let input = "
         1001 == 1001;
         192 != 99;
@@ -166,7 +166,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn should_tokenize_input_5() {
+    fn should_tokenize_floats() {
         let input = "
         let some_x = 5.55;
         6.891 != 891.129;
