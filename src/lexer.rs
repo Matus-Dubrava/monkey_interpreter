@@ -89,16 +89,23 @@ impl Lexer {
 
         self.move_read_position_one_char_back();
 
+        // Note on why this range is inclusive: when we finish reading
+        // characters, we move one char back so that the current position
+        // points to the last character of the number (whether valid or invalid).
+        // This is due to moving position/read position one char back, therefore
+        // we need include characted at the current position as well.
+        // Ideally, we would never need to move the read position back but that
+        // would require some serious refactor because.
         if is_float && !self.ch.is_numeric() {
-            return ("".to_string(), TokenType::ILLEGAL);
+            return ("illegal".to_string(), TokenType::ILLEGAL);
         } else if is_float {
             return (
-                String::from(&self.input[position..self.position]),
+                String::from(&self.input[position..=self.position]),
                 TokenType::FLOAT,
             );
         } else {
             return (
-                String::from(&self.input[position..self.position]),
+                String::from(&self.input[position..=self.position]),
                 TokenType::INT,
             );
         }
@@ -183,17 +190,15 @@ impl Lexer {
                         tok = Token::from_str(TokenType::IDENT, &literal);
                     }
                 } else if self.ch.is_numeric() {
-                    // currently we are supporting only integers
-                    // this can be further extended to support floats as well
-
-                    let int_literal = self.read_integer();
-                    tok = Token::from_str(TokenType::INT, &int_literal);
-
                     let (number, tok_type) = self.read_number();
                     match tok_type {
-                        TokenType::INT => tok = Token::from_str(TokenType::INT, number),
-                        TokenType::FLOAT => tok = Token::from_str(TokenType::FLOAT, number),
-                        TokenType::ILLEGAL => tok = Token::from_str(TokenType::ILLEGAL, number),
+                        TokenType::INT => tok = Token::from_str(TokenType::INT, number.as_str()),
+                        TokenType::FLOAT => {
+                            tok = Token::from_str(TokenType::FLOAT, number.as_str())
+                        }
+                        TokenType::ILLEGAL => {
+                            tok = Token::from_str(TokenType::ILLEGAL, number.as_str())
+                        }
                         _ => unreachable!(),
                     }
                 } else {
