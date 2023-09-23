@@ -75,14 +75,40 @@ impl Lexer {
         }
     }
 
-    pub fn read_integer(&mut self) -> String {
+    pub fn read_number(&mut self) -> (String, TokenType) {
         let position = self.position;
-        while self.ch.is_numeric() {
-            self.read_char()
+        let mut is_float = false;
+
+        while self.ch.is_numeric() || self.ch == '.' {
+            self.read_char();
+
+            if self.ch == '.' {
+                is_float = true;
+            }
         }
-        let result = String::from(&self.input[position..self.position]);
+
         self.move_read_position_one_char_back();
-        return result;
+
+        // Note on why this range is inclusive: when we finish reading
+        // characters, we move one char back so that the current position
+        // points to the last character of the number (whether valid or invalid).
+        // This is due to moving position/read position one char back, therefore
+        // we need include characted at the current position as well.
+        // Ideally, we would never need to move the read position back but that
+        // would require some serious refactor because.
+        if is_float && !self.ch.is_numeric() {
+            return ("illegal".to_string(), TokenType::ILLEGAL);
+        } else if is_float {
+            return (
+                String::from(&self.input[position..=self.position]),
+                TokenType::FLOAT,
+            );
+        } else {
+            return (
+                String::from(&self.input[position..=self.position]),
+                TokenType::INT,
+            );
+        }
     }
 
     pub fn read_identifier(&mut self) -> String {
@@ -164,10 +190,17 @@ impl Lexer {
                         tok = Token::from_str(TokenType::IDENT, &literal);
                     }
                 } else if self.ch.is_numeric() {
-                    // currently we are supporting only integers
-                    // this can be further extended to support floats as well
-                    let int_literal = self.read_integer();
-                    tok = Token::from_str(TokenType::INT, &int_literal);
+                    let (number, tok_type) = self.read_number();
+                    match tok_type {
+                        TokenType::INT => tok = Token::from_str(TokenType::INT, number.as_str()),
+                        TokenType::FLOAT => {
+                            tok = Token::from_str(TokenType::FLOAT, number.as_str())
+                        }
+                        TokenType::ILLEGAL => {
+                            tok = Token::from_str(TokenType::ILLEGAL, number.as_str())
+                        }
+                        _ => unreachable!(),
+                    }
                 } else {
                     tok = Token::from_char(TokenType::ILLEGAL, self.ch);
                 }

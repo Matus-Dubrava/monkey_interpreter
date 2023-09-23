@@ -179,6 +179,7 @@ impl Program {
     }
 }
 
+#[derive(Debug)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,
@@ -208,6 +209,36 @@ impl IntegerLiteral {
     }
 }
 
+#[derive(Debug)]
+pub struct FloatLiteral {
+    pub token: Token,
+    pub value: f64,
+}
+
+impl Expression for FloatLiteral {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn expression_node(&self) {}
+}
+
+impl Node for FloatLiteral {
+    fn to_string(&self) -> String {
+        self.token.literal.clone()
+    }
+
+    fn token_literal(&self) -> &str {
+        self.token.literal.as_str()
+    }
+}
+
+impl FloatLiteral {
+    pub fn new(token: Token, value: f64) -> Self {
+        Self { token, value }
+    }
+}
+
+#[derive(Debug)]
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -314,6 +345,7 @@ impl ReturnStatement {
     }
 }
 
+#[derive(Debug)]
 pub struct Boolean {
     pub token: Token,
     pub value: bool,

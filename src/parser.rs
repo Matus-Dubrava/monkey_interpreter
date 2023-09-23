@@ -2,8 +2,9 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use crate::ast::{
-    Boolean, DummyExpression, Expression, ExpressionStatement, Identifier, InfixExpression,
-    IntegerLiteral, LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
+    Boolean, DummyExpression, Expression, ExpressionStatement, FloatLiteral, Identifier,
+    InfixExpression, IntegerLiteral, LetStatement, Node, PrefixExpression, Program,
+    ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -57,6 +58,7 @@ impl Parser {
         parser.register_prefix(TokenType::MINUS, Parser::parse_prefix_expression);
         parser.register_prefix(TokenType::TRUE, Parser::parse_boolean);
         parser.register_prefix(TokenType::FALSE, Parser::parse_boolean);
+        parser.register_prefix(TokenType::FLOAT, Parser::parse_float_literal);
 
         parser.register_infix(TokenType::PLUS, Parser::parse_infix_expression);
         parser.register_infix(TokenType::MINUS, Parser::parse_infix_expression);
@@ -276,15 +278,32 @@ impl Parser {
 
         if value.is_err() {
             self.errors.push(format!(
-                "could not parse {} as integer",
+                "could not parse `{}` into integer",
                 self.cur_token.literal
             ));
             return None;
         } else {
-            Some(Box::new(IntegerLiteral::new(
+            return Some(Box::new(IntegerLiteral::new(
                 self.cur_token.clone(),
                 value.unwrap(),
-            )))
+            )));
+        }
+    }
+
+    pub fn parse_float_literal(&mut self) -> Option<Box<dyn Expression>> {
+        let value = self.cur_token.literal.parse::<f64>();
+
+        if value.is_err() {
+            self.errors.push(format!(
+                "could not parse `{}` into float",
+                self.cur_token.literal
+            ));
+            return None;
+        } else {
+            return Some(Box::new(FloatLiteral::new(
+                self.cur_token.clone(),
+                value.unwrap(),
+            )));
         }
     }
 

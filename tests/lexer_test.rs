@@ -104,7 +104,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn should_tokenize_input_3() {
+    fn should_tokenize_should_tokenize_if_else_statement() {
         let input = "
         if (5 < 10) {
             return true;
@@ -141,27 +141,57 @@ mod parser_tests {
     }
 
     #[test]
-    fn should_tokenize_input_4() {
+    fn should_tokenize_equals_and_not_equals() {
         let input = "
-        10 == 10;
-        10 != 9;
+        1001 == 1001;
+        192 != 99;
         ";
 
         let mut lex = Lexer::new(&input.to_string());
 
         let exp_tokens = Vec::from([
-            Token::from_str(TokenType::INT, "10"),
+            Token::from_str(TokenType::INT, "1001"),
             Token::from_str(TokenType::EQ, "=="),
-            Token::from_str(TokenType::INT, "10"),
+            Token::from_str(TokenType::INT, "1001"),
             Token::from_str(TokenType::SEMICOLON, ";"),
-            Token::from_str(TokenType::INT, "10"),
+            Token::from_str(TokenType::INT, "192"),
             Token::from_str(TokenType::NOTEQ, "!="),
-            Token::from_str(TokenType::INT, "9"),
+            Token::from_str(TokenType::INT, "99"),
             Token::from_str(TokenType::SEMICOLON, ";"),
             Token::from_str(TokenType::EOF, "\0"),
         ]);
 
         let tokens = lex.get_all_tokens();
+        assert_tokens_eq(&exp_tokens, &tokens);
+    }
+
+    #[test]
+    fn should_tokenize_floats() {
+        let input = "
+        let some_x = 5.55;
+        6.891 != 891.129;
+        41.;
+        ";
+
+        let mut lex = Lexer::new(&input.to_string());
+
+        let exp_tokens = Vec::from([
+            Token::from_str(TokenType::LET, "let"),
+            Token::from_str(TokenType::IDENT, "some_x"),
+            Token::from_str(TokenType::ASSIGN, "="),
+            Token::from_str(TokenType::FLOAT, "5.55"),
+            Token::from_str(TokenType::SEMICOLON, ";"),
+            Token::from_str(TokenType::FLOAT, "6.891"),
+            Token::from_str(TokenType::NOTEQ, "!="),
+            Token::from_str(TokenType::FLOAT, "891.129"),
+            Token::from_str(TokenType::SEMICOLON, ";"),
+            Token::from_str(TokenType::ILLEGAL, "illegal"),
+            Token::from_str(TokenType::SEMICOLON, ";"),
+            Token::from_str(TokenType::EOF, "\0"),
+        ]);
+
+        let tokens = lex.get_all_tokens();
+
         assert_tokens_eq(&exp_tokens, &tokens);
     }
 }

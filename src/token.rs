@@ -27,6 +27,7 @@ pub enum TokenType {
     RETURN,
     EQ,
     NOTEQ,
+    FLOAT,
 }
 
 impl TokenType {
@@ -74,6 +75,7 @@ impl ToString for TokenType {
             TokenType::RETURN => "RETURN".to_string(),
             TokenType::EQ => "EQ".to_string(),
             TokenType::NOTEQ => "NOTEQ".to_string(),
+            TokenType::FLOAT => "FLOAT".to_string(),
         }
     }
 }
