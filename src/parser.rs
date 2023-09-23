@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::ast::{
-    DummyExpression, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral,
-    LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
+    Boolean, DummyExpression, Expression, ExpressionStatement, Identifier, InfixExpression,
+    IntegerLiteral, LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -54,6 +54,8 @@ impl Parser {
         parser.register_prefix(TokenType::INT, Parser::parse_integer_literal);
         parser.register_prefix(TokenType::BANG, Parser::parse_prefix_expression);
         parser.register_prefix(TokenType::MINUS, Parser::parse_prefix_expression);
+        parser.register_prefix(TokenType::TRUE, Parser::parse_boolean);
+        parser.register_prefix(TokenType::FALSE, Parser::parse_boolean);
 
         parser.register_infix(TokenType::PLUS, Parser::parse_infix_expression);
         parser.register_infix(TokenType::MINUS, Parser::parse_infix_expression);
@@ -248,6 +250,13 @@ impl Parser {
         } else {
             None
         }
+    }
+
+    pub fn parse_boolean(&mut self) -> Option<Box<dyn Expression>> {
+        Some(Box::new(Boolean::new(
+            self.cur_token.clone(),
+            self.cur_token_is(TokenType::TRUE),
+        )))
     }
 
     pub fn parse_identifier(&mut self) -> Option<Box<dyn Expression>> {

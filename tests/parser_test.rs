@@ -427,6 +427,18 @@ mod parsers_tests {
         ));
 
         test_boolean(&expr, &false);
+
+        let input = "true";
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+
+        let expr = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>()
+            .unwrap();
+
+        test_boolean(&expr.expression, &true);
     }
 
     fn test_identifier(expression: &Box<dyn Expression>, value: &str) {
@@ -463,6 +475,8 @@ mod parsers_tests {
     }
 
     fn test_literal_expression(expression: &Box<dyn Expression>, expected: &Box<dyn Any>) {
+        // each literal needs to be registered here before we can
+        // test it in infix expression
         let exp = expected.downcast_ref::<i32>();
         if let Some(exp) = exp {
             test_integer_literal(&expression, *exp as i64);
@@ -476,6 +490,11 @@ mod parsers_tests {
         let exp = expected.downcast_ref::<String>();
         if let Some(exp) = exp {
             test_identifier(&expression, exp);
+        }
+
+        let exp = expected.downcast_ref::<bool>();
+        if let Some(exp) = exp {
+            test_boolean(expression, exp);
         }
     }
 
@@ -499,32 +518,8 @@ mod parsers_tests {
     }
 
     #[test]
-    fn test_manual_test_infix_expressin() {
-        let left: Box<dyn Expression> = Box::new(IntegerLiteral::new(
-            Token::from_char(TokenType::INT, '5'),
-            5,
-        ));
-        let right: Box<dyn Expression> = Box::new(IntegerLiteral::new(
-            Token::from_char(TokenType::INT, '1'),
-            1,
-        ));
-        let tok = Token::from_str(TokenType::IDENT, "some".to_string());
-        let operator = "+".to_string();
-        let expr: Box<dyn Expression> = Box::new(InfixExpression::new(tok, left, &operator, right));
-
-        let left: Box<dyn Any> = Box::new(IntegerLiteral::new(
-            Token::from_char(TokenType::INT, '5'),
-            5,
-        ));
-        let right: Box<dyn Any> = Box::new(IntegerLiteral::new(
-            Token::from_char(TokenType::INT, '1'),
-            1,
-        ));
-        test_infix_expression(&expr, &left, operator, &right);
-    }
-
-    #[test]
-    fn test_program_test_infix_expression() {
+    fn test_test_infix_expression() {
+        // testing integer literals
         let input = "1 + 2";
         let lex = Lexer::new(&input.to_string());
         let mut parser = Parser::new(lex);
@@ -537,6 +532,28 @@ mod parsers_tests {
         let left: Box<dyn Any> = Box::new(1);
         let right: Box<dyn Any> = Box::new(2);
         test_infix_expression(&expr, &left, "+".to_string(), &right);
+
+        // testing boolean literals
+        let input = "true + false";
+        let lex = Lexer::new(&input.to_string());
+        let mut parser = Parser::new(lex);
+        let program = parser.parse_program().unwrap();
+
+        let expr = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>()
+            .unwrap();
+
+        let infix_expr = expr.expression.as_any().downcast_ref::<InfixExpression>();
+        assert!(
+            infix_expr.is_some(),
+            "expected expression {} to be InfixExpression",
+            expr.to_string()
+        );
+
+        let left: Box<dyn Any> = Box::new(true);
+        let right: Box<dyn Any> = Box::new(false);
+        test_infix_expression(&expr.expression, &left, "+".to_string(), &right)
     }
 
     fn test_integer_literal(int_literal: &Box<dyn Expression>, value: i64) {
