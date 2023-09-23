@@ -398,15 +398,21 @@ mod parsers_tests {
         );
     }
 
-    fn test_boolean(expression: &Box<dyn Expression>, value: &bool) {
+    fn test_boolean_literal(expression: &Box<dyn Expression>, value: &bool) {
         let b = expression.as_any().downcast_ref::<Boolean>();
         assert!(b.is_some(), "expected Expression to be Boolean");
         let b = b.unwrap();
 
         assert_eq!(
+            b.value, *value,
+            "expected boolean value to be {}, got={}",
+            value, b.value
+        );
+
+        assert_eq!(
             b.token_literal(),
             value.to_string(),
-            "expected boolean to be {}, got={}",
+            "expected boolean literal to be {}, got={}",
             value.to_string(),
             b.token_literal()
         );
@@ -419,14 +425,14 @@ mod parsers_tests {
             true,
         ));
 
-        test_boolean(&expr, &true);
+        test_boolean_literal(&expr, &true);
 
         let expr: Box<dyn Expression> = Box::new(Boolean::new(
             Token::from_str(TokenType::FALSE, "false".to_string()),
             false,
         ));
 
-        test_boolean(&expr, &false);
+        test_boolean_literal(&expr, &false);
 
         let input = "true";
         let lex = Lexer::new(&input.to_string());
@@ -438,7 +444,7 @@ mod parsers_tests {
             .downcast_ref::<ExpressionStatement>()
             .unwrap();
 
-        test_boolean(&expr.expression, &true);
+        test_boolean_literal(&expr.expression, &true);
     }
 
     fn test_identifier(expression: &Box<dyn Expression>, value: &str) {
@@ -494,7 +500,7 @@ mod parsers_tests {
 
         let exp = expected.downcast_ref::<bool>();
         if let Some(exp) = exp {
-            test_boolean(expression, exp);
+            test_boolean_literal(expression, exp);
         }
     }
 
