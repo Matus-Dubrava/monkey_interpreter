@@ -155,4 +155,37 @@ mod parser_tests {
 
         assert_tokens_eq(&exp_tokens, &mut lex, false);
     }
+
+    #[test]
+    fn should_tokenize_input_5() {
+        let input = "
+        let x = 5.55;
+        6.891 != 891.129;
+        41.;
+        1 + 2;
+        ";
+
+        let mut lex = Lexer::new(&input.to_string());
+
+        let exp_tokens = Vec::from([
+            TokenType::LET,
+            TokenType::IDENT,
+            TokenType::ASSIGN,
+            TokenType::FLOAT,
+            TokenType::SEMICOLON,
+            TokenType::FLOAT,
+            TokenType::NOTEQ,
+            TokenType::FLOAT,
+            TokenType::SEMICOLON,
+            TokenType::ILLEGAL,
+            TokenType::SEMICOLON,
+            TokenType::INT,
+            TokenType::PLUS,
+            TokenType::INT,
+            TokenType::SEMICOLON,
+            TokenType::EOF,
+        ]);
+
+        assert_tokens_eq(&exp_tokens, &mut lex, false);
+    }
 }

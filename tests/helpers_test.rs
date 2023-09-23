@@ -18,6 +18,7 @@ mod helpers_test {
         let input = "1 + 2";
         let mut parser = Parser::from_str(input);
         let program = parser.parse_program();
+        validate_program_length(&program, 1);
 
         let expr = get_and_assert_expression(&program.statements[0]);
         let left: Box<dyn Any> = Box::new(1);
