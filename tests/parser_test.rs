@@ -49,6 +49,11 @@ mod parsers_tests {
             OperatorPrecedenenceTest::new("false", "false"),
             OperatorPrecedenenceTest::new("3 > 5 == false", "((3 > 5) == false)"),
             OperatorPrecedenenceTest::new("3 < 5 == true", "((3 < 5) == true)"),
+            OperatorPrecedenenceTest::new("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
+            OperatorPrecedenenceTest::new("(5 + 5) * 2", "((5 + 5) * 2)"),
+            OperatorPrecedenenceTest::new("2 / (5 + 5)", "(2 / (5 + 5))"),
+            OperatorPrecedenenceTest::new("-(5 + 5)", "(-(5 + 5))"),
+            OperatorPrecedenenceTest::new("!(true == true)", "(!(true == true))"),
         ]);
 
         for test_case in test_cases {

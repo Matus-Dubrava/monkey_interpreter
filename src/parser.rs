@@ -59,6 +59,7 @@ impl Parser {
         parser.register_prefix(TokenType::TRUE, Parser::parse_boolean);
         parser.register_prefix(TokenType::FALSE, Parser::parse_boolean);
         parser.register_prefix(TokenType::FLOAT, Parser::parse_float_literal);
+        parser.register_prefix(TokenType::LPAREN, Parser::parse_grouped_expressions);
 
         parser.register_infix(TokenType::PLUS, Parser::parse_infix_expression);
         parser.register_infix(TokenType::MINUS, Parser::parse_infix_expression);
@@ -155,6 +156,24 @@ impl Parser {
         }
     }
 
+    /// Parsing function associated with left parentheses (LPAREN). This function
+    /// is responsible for correct parsing expressions enclosed in parentheses.
+    /// i.e 10 * (5 + 5) is parsed into (10 * (5 + 5)).
+    /// It works by boosting precedence of enclosed expression.
+    pub fn parse_grouped_expressions(&mut self) -> Option<Box<dyn Expression>> {
+        self.next_token();
+
+        let expr = self.parse_expression(LOWEST);
+
+        // After the enclosed expression is parsed, we expect next character
+        // to be right parentheses.
+        if !self.expect_peek_and_advance(TokenType::RPAREN) {
+            return None;
+        }
+
+        return expr;
+    }
+
     pub fn parse_expression_statement(&mut self) -> Option<Box<dyn Statement>> {
         if let Some(expression) = self.parse_expression(LOWEST) {
             let token = self.cur_token.clone();
@@ -171,31 +190,13 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self, precedence: u8) -> Option<Box<dyn Expression>> {
-        dbg!(
-            "[PARSE_EXPRESSION] cur_token: {}",
-            self.cur_token.r#type.to_string()
-        );
-
         let prefix_fn = self.prefix_parse_fns.get(&self.cur_token.r#type);
         if prefix_fn.is_none() {
-            dbg!(
-                "\t[PARSE_EXPRESSION] prefix parse function for token {}, NOT found",
-                self.cur_token.r#type.to_string()
-            );
             self.no_prefix_parse_fn_error(self.cur_token.r#type);
             return None;
-        } else {
-            dbg!(
-                "\t[PARSE_EXPRESSION] prefix parse function for token {}, found",
-                self.cur_token.r#type.to_string()
-            );
         }
 
         let mut left_expr = prefix_fn.unwrap()(self);
-        dbg!(
-            "\t[PARSE_EXPRESSION] letf_expr: {}",
-            left_expr.as_ref().unwrap().to_string()
-        );
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
             // do we need to clone this or is there a better way to resolve this
@@ -209,10 +210,6 @@ impl Parser {
                 return left_expr;
             }
         }
-        dbg!(
-            "\t[PARSE_EXPRESSION] parsed expression: {}",
-            left_expr.as_ref().unwrap().to_string()
-        );
 
         return left_expr;
     }
