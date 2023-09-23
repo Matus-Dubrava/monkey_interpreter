@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use crate::ast::{
     Boolean, DummyExpression, Expression, ExpressionStatement, Identifier, InfixExpression,
@@ -69,6 +70,11 @@ impl Parser {
         parser
     }
 
+    pub fn from_str(input: &str) -> Self {
+        let lex = Lexer::new(&input.to_string());
+        return Parser::new(lex);
+    }
+
     pub fn initialize_precedences() -> HashMap<TokenType, u8> {
         let mut map: HashMap<TokenType, u8> = HashMap::new();
         map.insert(TokenType::EQ, EQUALS);
@@ -125,8 +131,7 @@ impl Parser {
         self.peek_token = self.lex.next_token();
     }
 
-    pub fn parse_program(&mut self) -> Option<Program> {
-        // do we need to return an Option here?
+    pub fn parse_program(&mut self) -> Program {
         let mut program = Program::new();
 
         while !self.cur_token_is(TokenType::EOF) {
@@ -137,7 +142,7 @@ impl Parser {
             self.next_token(); // does this correctly eats semicolons?
         }
 
-        Some(program)
+        return program;
     }
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {

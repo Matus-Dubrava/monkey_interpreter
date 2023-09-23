@@ -49,9 +49,8 @@ mod parsers_tests {
         ]);
 
         for test_case in test_cases {
-            let lex = Lexer::new(&test_case.input);
-            let mut parser = Parser::new(lex);
-            let program = parser.parse_program().unwrap();
+            let mut parser = Parser::from_str(test_case.input.as_str());
+            let program = parser.parse_program();
             check_parse_errors(&parser);
 
             let program_string = program.to_string();
@@ -87,9 +86,8 @@ mod parsers_tests {
         ]);
 
         for test_case in test_cases {
-            let lex = Lexer::new(&test_case.input);
-            let mut parser = Parser::new(lex);
-            let program = parser.parse_program().unwrap();
+            let mut parser = Parser::from_str(test_case.input.as_str());
+            let program = parser.parse_program();
 
             validate_program_length(&program, 1);
 
@@ -139,9 +137,8 @@ mod parsers_tests {
         ]);
 
         for test_case in test_cases {
-            let lex = Lexer::new(&test_case.input);
-            let mut parser = Parser::new(lex);
-            let program = parser.parse_program().unwrap();
+            let mut parser = Parser::from_str(test_case.input.as_str());
+            let program = parser.parse_program();
 
             check_parse_errors(&parser);
             validate_program_length(&program, 1);
@@ -174,9 +171,8 @@ mod parsers_tests {
         let foobar = 12345;
         ";
 
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
 
         check_parse_errors(&parser);
         validate_program_length(&program, 3);
@@ -197,9 +193,8 @@ mod parsers_tests {
         return 10000;
         ";
 
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
         validate_program_length(&program, 3);
         check_parse_errors(&parser);
 
@@ -217,9 +212,8 @@ mod parsers_tests {
 
         let expected_values = Vec::from([true, false]);
 
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
         validate_program_length(&program, 2);
         check_parse_errors(&parser);
 
@@ -231,10 +225,9 @@ mod parsers_tests {
 
     #[test]
     fn should_parse_identifier_expression() {
-        let input = "foobar;".to_string();
-        let lex = Lexer::new(&input);
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
+        let input = "foobar;";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
 
         check_parse_errors(&parser);
         validate_program_length(&program, 1);
@@ -246,10 +239,9 @@ mod parsers_tests {
 
     #[test]
     fn should_parse_integer_literal_expression() {
-        let input = "5;".to_string();
-        let lex = Lexer::new(&input);
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
+        let input = "5;";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
 
         check_parse_errors(&parser);
         validate_program_length(&program, 1);
@@ -267,10 +259,9 @@ mod parsers_tests {
         let 12345;
         ";
 
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
+        let mut parser = Parser::from_str(input);
+        parser.parse_program();
 
-        parser.parse_program().unwrap();
         assert!(
             parser.get_errors().len() >= 3,
             "expected at least 3 errors, got={}",
