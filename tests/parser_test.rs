@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod parsers_tests {
     use monkey_interpreter::ast::{
-        Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement,
-        Node, PrefixExpression, Program, ReturnStatement, Statement,
+        Boolean, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral,
+        LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
     };
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
@@ -396,6 +396,37 @@ mod parsers_tests {
             "encoutered {} errors during parsing",
             errors.len()
         );
+    }
+
+    fn test_boolean(expression: &Box<dyn Expression>, value: &bool) {
+        let b = expression.as_any().downcast_ref::<Boolean>();
+        assert!(b.is_some(), "expected Expression to be Boolean");
+        let b = b.unwrap();
+
+        assert_eq!(
+            b.token_literal(),
+            value.to_string(),
+            "expected boolean to be {}, got={}",
+            value.to_string(),
+            b.token_literal()
+        );
+    }
+
+    #[test]
+    fn test_test_boolean() {
+        let expr: Box<dyn Expression> = Box::new(Boolean::new(
+            Token::from_str(TokenType::TRUE, "true".to_string()),
+            true,
+        ));
+
+        test_boolean(&expr, &true);
+
+        let expr: Box<dyn Expression> = Box::new(Boolean::new(
+            Token::from_str(TokenType::FALSE, "false".to_string()),
+            false,
+        ));
+
+        test_boolean(&expr, &false);
     }
 
     fn test_identifier(expression: &Box<dyn Expression>, value: &str) {

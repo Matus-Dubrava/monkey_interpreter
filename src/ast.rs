@@ -313,3 +313,32 @@ impl ReturnStatement {
         }
     }
 }
+
+pub struct Boolean {
+    pub token: Token,
+    pub value: bool,
+}
+
+impl Expression for Boolean {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn expression_node(&self) {}
+}
+
+impl Node for Boolean {
+    fn to_string(&self) -> String {
+        self.token.literal.clone()
+    }
+
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+}
+
+impl Boolean {
+    pub fn new(token: Token, value: bool) -> Self {
+        Boolean { token, value }
+    }
+}
