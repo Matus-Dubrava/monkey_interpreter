@@ -1,14 +1,16 @@
+mod helpers;
+
 #[cfg(test)]
 mod parsers_tests {
     use monkey_interpreter::ast::{
-        Boolean, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral,
-        LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
+        ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, Node,
+        PrefixExpression, Program, Statement,
     };
     use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
     use monkey_interpreter::token::{Token, TokenType};
 
-    use std::any::Any;
+    use crate::helpers::*;
 
     #[test]
     fn test_operator_precedence_parsing() {
@@ -125,7 +127,7 @@ mod parsers_tests {
                 test_case.operator, prefix_expr.operator
             );
 
-            test_integer_literal(&prefix_expr.right, test_case.int_value);
+            validate_integer_literal(&prefix_expr.right, test_case.int_value);
         }
     }
 
@@ -198,7 +200,7 @@ mod parsers_tests {
 
             let infix_expr = infix_expr.unwrap();
 
-            test_integer_literal(&infix_expr.left, test_case.left_value);
+            validate_integer_literal(&infix_expr.left, test_case.left_value);
 
             assert_eq!(
                 infix_expr.operator, test_case.operator,
@@ -206,7 +208,7 @@ mod parsers_tests {
                 test_case.operator, infix_expr.operator
             );
 
-            test_integer_literal(&infix_expr.right, test_case.right_value);
+            validate_integer_literal(&infix_expr.right, test_case.right_value);
         }
     }
     #[test]
@@ -231,7 +233,7 @@ mod parsers_tests {
 
         for (i, name) in tests.iter().enumerate() {
             let stmt = &program.statements[i];
-            test_let_statement(stmt, name);
+            validate_let_statement(stmt, name);
         }
     }
 
@@ -252,7 +254,7 @@ mod parsers_tests {
         check_parse_errors(&parser);
 
         for stmt in program.statements {
-            test_return_statement(&stmt);
+            validate_return_statement(&stmt);
         }
     }
 
@@ -381,255 +383,5 @@ mod parsers_tests {
 
         let program = Program::from_statements(statements);
         assert_eq!(program.to_string(), "let my_var = another_var;");
-    }
-
-    fn check_parse_errors(parser: &Parser) {
-        let errors = parser.get_errors();
-
-        for err in errors {
-            eprintln!("parser error: {}", err);
-        }
-
-        assert_eq!(
-            errors.len(),
-            0,
-            "encoutered {} errors during parsing",
-            errors.len()
-        );
-    }
-
-    fn test_boolean_literal(expression: &Box<dyn Expression>, value: &bool) {
-        let b = expression.as_any().downcast_ref::<Boolean>();
-        assert!(b.is_some(), "expected Expression to be Boolean");
-        let b = b.unwrap();
-
-        assert_eq!(
-            b.value, *value,
-            "expected boolean value to be {}, got={}",
-            value, b.value
-        );
-
-        assert_eq!(
-            b.token_literal(),
-            value.to_string(),
-            "expected boolean literal to be {}, got={}",
-            value.to_string(),
-            b.token_literal()
-        );
-    }
-
-    #[test]
-    fn test_test_boolean() {
-        let expr: Box<dyn Expression> = Box::new(Boolean::new(
-            Token::from_str(TokenType::TRUE, "true".to_string()),
-            true,
-        ));
-
-        test_boolean_literal(&expr, &true);
-
-        let expr: Box<dyn Expression> = Box::new(Boolean::new(
-            Token::from_str(TokenType::FALSE, "false".to_string()),
-            false,
-        ));
-
-        test_boolean_literal(&expr, &false);
-
-        let input = "true";
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
-
-        let expr = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>()
-            .unwrap();
-
-        test_boolean_literal(&expr.expression, &true);
-    }
-
-    fn test_identifier(expression: &Box<dyn Expression>, value: &str) {
-        let ident = expression.as_any().downcast_ref::<Identifier>();
-        assert!(ident.is_some(), "expected Expression to be Identifier");
-        let ident = ident.unwrap();
-        assert_eq!(
-            ident.value, value,
-            "exprected Identifier value to be {}, got={}",
-            value, ident.value
-        );
-        assert_eq!(
-            ident.token_literal(),
-            value,
-            "expected Identifier token literal to be {}, got={}",
-            value,
-            ident.token_literal()
-        );
-    }
-
-    #[test]
-    fn test_test_identifier() {
-        let input = "x;";
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
-
-        assert_eq!(program.statements.len(), 1);
-        let expr_stmt = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>();
-        assert!(expr_stmt.is_some(), "Statement is not Expression Statement");
-        test_identifier(&expr_stmt.unwrap().expression, "x");
-    }
-
-    fn test_literal_expression(expression: &Box<dyn Expression>, expected: &Box<dyn Any>) {
-        // each literal needs to be registered here before we can
-        // test it in infix expression
-        let exp = expected.downcast_ref::<i32>();
-        if let Some(exp) = exp {
-            test_integer_literal(&expression, *exp as i64);
-        }
-
-        let exp = expected.downcast_ref::<i64>();
-        if let Some(exp) = exp {
-            test_integer_literal(&expression, *exp);
-        }
-
-        let exp = expected.downcast_ref::<String>();
-        if let Some(exp) = exp {
-            test_identifier(&expression, exp);
-        }
-
-        let exp = expected.downcast_ref::<bool>();
-        if let Some(exp) = exp {
-            test_boolean_literal(expression, exp);
-        }
-    }
-
-    fn test_infix_expression(
-        expression: &Box<dyn Expression>,
-        left: &Box<dyn Any>,
-        operator: String,
-        right: &Box<dyn Any>,
-    ) {
-        let expr = expression.as_any().downcast_ref::<InfixExpression>();
-        assert!(expr.is_some(), "Expression is not InfixExpression");
-        let expr = expr.unwrap();
-
-        test_literal_expression(&expr.left, &left);
-        assert_eq!(
-            expr.operator, operator,
-            "expected operator `{}`, got={}",
-            operator, expr.operator
-        );
-        test_literal_expression(&expr.right, &right);
-    }
-
-    #[test]
-    fn test_test_infix_expression() {
-        // testing integer literals
-        let input = "1 + 2";
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
-
-        let expr = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>();
-        let expr = &expr.unwrap().expression;
-        let left: Box<dyn Any> = Box::new(1);
-        let right: Box<dyn Any> = Box::new(2);
-        test_infix_expression(&expr, &left, "+".to_string(), &right);
-
-        // testing boolean literals
-        let input = "true + false";
-        let lex = Lexer::new(&input.to_string());
-        let mut parser = Parser::new(lex);
-        let program = parser.parse_program().unwrap();
-
-        let expr = program.statements[0]
-            .as_any()
-            .downcast_ref::<ExpressionStatement>()
-            .unwrap();
-
-        let infix_expr = expr.expression.as_any().downcast_ref::<InfixExpression>();
-        assert!(
-            infix_expr.is_some(),
-            "expected expression {} to be InfixExpression",
-            expr.to_string()
-        );
-
-        let left: Box<dyn Any> = Box::new(true);
-        let right: Box<dyn Any> = Box::new(false);
-        test_infix_expression(&expr.expression, &left, "+".to_string(), &right)
-    }
-
-    fn test_integer_literal(int_literal: &Box<dyn Expression>, value: i64) {
-        let int = int_literal.as_any().downcast_ref::<IntegerLiteral>();
-        assert_eq!(
-            int.is_some(),
-            true,
-            "expected expression to be IntegerLiteral"
-        );
-
-        let int = int.unwrap();
-
-        assert_eq!(
-            int.value, value,
-            "expected value to be {}, got={}",
-            int.value, value
-        );
-
-        assert_eq!(
-            int.token_literal(),
-            value.to_string(),
-            "expected token literal to be {}, got={}",
-            int.token_literal(),
-            value.to_string()
-        );
-    }
-
-    fn test_return_statement(stmt: &Box<dyn Statement>) {
-        assert_eq!(
-            stmt.token_literal(),
-            "return",
-            "statement's token literal is not 'return', got={}",
-            stmt.token_literal()
-        );
-
-        let return_stmt = stmt.as_any().downcast_ref::<ReturnStatement>();
-        assert_eq!(
-            return_stmt.is_none(),
-            false,
-            "expected statement to be ReturnStatement"
-        );
-    }
-
-    fn test_let_statement(stmt: &Box<dyn Statement>, name: &String) {
-        assert_eq!(
-            stmt.token_literal(),
-            "let",
-            "expected token literal to be `let`, got={}",
-            stmt.token_literal()
-        );
-
-        let let_stmt = stmt.as_any().downcast_ref::<LetStatement>();
-        assert_eq!(
-            let_stmt.is_some(),
-            true,
-            "expected statement to be LetStatement"
-        );
-
-        let let_stmt = let_stmt.unwrap();
-        assert_eq!(
-            &let_stmt.name.value, name,
-            "LetStatement name is not {}, got={}",
-            name, let_stmt.name.value
-        );
-        assert_eq!(
-            &let_stmt.name.token_literal(),
-            name,
-            "statement name is not {}, got={}",
-            name,
-            let_stmt.name.token_literal()
-        );
     }
 }
