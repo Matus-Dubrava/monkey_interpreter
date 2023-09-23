@@ -5,7 +5,6 @@ mod parsers_tests {
     use std::any::Any;
 
     use monkey_interpreter::ast::{Identifier, LetStatement, Node, Program, Statement};
-    use monkey_interpreter::lexer::Lexer;
     use monkey_interpreter::parser::Parser;
     use monkey_interpreter::token::{Token, TokenType};
 
@@ -88,7 +87,6 @@ mod parsers_tests {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.input.as_str());
             let program = parser.parse_program();
-
             validate_program_length(&program, 1);
 
             let expr = get_and_assert_expression(&program.statements[0]);
@@ -195,6 +193,7 @@ mod parsers_tests {
 
         let mut parser = Parser::from_str(input);
         let program = parser.parse_program();
+
         validate_program_length(&program, 3);
         check_parse_errors(&parser);
 
@@ -211,9 +210,9 @@ mod parsers_tests {
         ";
 
         let expected_values = Vec::from([true, false]);
-
         let mut parser = Parser::from_str(input);
         let program = parser.parse_program();
+
         validate_program_length(&program, 2);
         check_parse_errors(&parser);
 
