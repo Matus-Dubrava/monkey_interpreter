@@ -18,6 +18,36 @@ impl Lexer {
         }
     }
 
+    /// This function consumes lexer's input and turns it into a vector
+    /// of tokens.
+    /// Note that that this function's primary puropse is for testing of lexer correctness and
+    /// doesn't have much of a value when it comes to actual parsing because
+    /// parser asks lexer to produce tokens one at a time.
+    pub fn get_all_tokens(&mut self) -> Vec<Token> {
+        // reset the state of a lexer so that it starts from the beginning
+        self.position = 0;
+        self.read_position = 0;
+        self.ch = self.input.chars().nth(0).unwrap_or('\0');
+
+        let mut tokens: Vec<Token> = Vec::new();
+
+        loop {
+            let token = self.next_token();
+            tokens.push(token.clone());
+
+            if token.r#type == TokenType::EOF {
+                break;
+            }
+        }
+
+        return tokens;
+    }
+
+    // Read next character from lexer's input and advance both current
+    // position and read/peek position. This function doesn't fail if we
+    // reach the end of the input or even if we try to ready past the end
+    // of the input. Instead of failing, it returns null character '\0'
+    // denoting the end of the input.
     pub fn read_char(&mut self) {
         let next_char = self.input.chars().nth(self.read_position);
         match next_char {
@@ -97,7 +127,10 @@ impl Lexer {
         let tok: Token;
 
         if next_ch == expected_next_ch {
-            tok = Token::from_str(token_type, self.ch.to_string() + &next_ch.to_string());
+            tok = Token::from_str(
+                token_type,
+                (self.ch.to_string() + &next_ch.to_string()).as_str(),
+            );
             self.read_char();
 
             Some(tok)
@@ -145,13 +178,17 @@ impl Lexer {
 
                     // decide whether token is a known keyword or an identifier
                     if let Some(keyword) = TokenType::get_keyword(&literal) {
-                        tok = Token::from_str(keyword, literal);
+                        tok = Token::from_str(keyword, &literal);
                     } else {
-                        tok = Token::from_str(TokenType::IDENT, literal);
+                        tok = Token::from_str(TokenType::IDENT, &literal);
                     }
                 } else if self.ch.is_numeric() {
                     // currently we are supporting only integers
                     // this can be further extended to support floats as well
+
+                    let int_literal = self.read_integer();
+                    tok = Token::from_str(TokenType::INT, &int_literal);
+
                     let (number, tok_type) = self.read_number();
                     match tok_type {
                         TokenType::INT => tok = Token::from_str(TokenType::INT, number),
