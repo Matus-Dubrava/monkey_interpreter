@@ -425,20 +425,20 @@ impl IfExpression {
     }
 }
 
-pub struct FunctionExpression {
+pub struct FunctionLiteral {
     pub token: Token, // the `fn` token
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
 }
 
-impl Expression for FunctionExpression {
+impl Expression for FunctionLiteral {
     fn as_any(&self) -> &dyn Any {
         self
     }
     fn expression_node(&self) {}
 }
 
-impl Node for FunctionExpression {
+impl Node for FunctionLiteral {
     fn token_literal(&self) -> &str {
         &self.token.literal
     }
@@ -452,12 +452,13 @@ impl Node for FunctionExpression {
                 s += format!("{}, ", param.to_string()).as_str();
             }
         }
+        s += ") ";
         s += self.body.to_string().as_str();
         return s;
     }
 }
 
-impl FunctionExpression {
+impl FunctionLiteral {
     pub fn new(token: Token, parameters: Vec<Identifier>, body: BlockStatement) -> Self {
         Self {
             token,

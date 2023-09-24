@@ -88,6 +88,12 @@ pub fn get_and_assert_if_expression(expr: &Box<dyn Expression>) -> &IfExpression
     return if_expr.unwrap();
 }
 
+pub fn get_and_assert_function_literal(expr: &Box<dyn Expression>) -> &FunctionLiteral {
+    let fn_literal = expr.as_any().downcast_ref::<FunctionLiteral>();
+    assert!(fn_literal.is_some(), "expected expression to be FunctionLiteral");
+    return fn_literal.unwrap();
+}
+
 pub fn check_parse_errors(parser: &Parser) {
     let errors = parser.get_errors();
 
@@ -235,13 +241,13 @@ pub fn validate_literal_expression(expression: &Box<dyn Expression>, expected: &
     // Identifier.
     let exp = expected.downcast_ref::<String>();
     if let Some(exp) = exp {
-        validate_identifier(&expression, exp);
+        validate_identifier_expression(&expression, exp);
         is_known_literal = true;
     }
 
     let exp = expected.downcast_ref::<&str>();
     if let Some(exp) = exp {
-        validate_identifier(&expression, exp);
+        validate_identifier_expression(&expression, exp);
         is_known_literal = true;
     }
 
@@ -267,22 +273,6 @@ pub fn validate_boolean_literal(expr: &Box<dyn Expression>, value: &bool) {
         "expected boolean literal to be {}, got={}",
         value.to_string(),
         boolean.token_literal()
-    );
-}
-
-pub fn validate_identifier(expr: &Box<dyn Expression>, value: &str) {
-    let ident = get_and_assert_identifier(&expr);
-    assert_eq!(
-        ident.value, value,
-        "exprected Identifier value to be {}, got={}",
-        value, ident.value
-    );
-    assert_eq!(
-        ident.token_literal(),
-        value,
-        "expected Identifier token literal to be {}, got={}",
-        value,
-        ident.token_literal()
     );
 }
 
@@ -313,5 +303,37 @@ pub fn validate_operator(operator: String, expected_operator: String) {
         expected_operator, operator,
         "expected operator `{}`, got={}",
         expected_operator, operator
+    );
+}
+
+/// The difference between `validate_identifier_expression` and 
+/// `validate_identifier` is that one the format expects `Expression` trait
+/// that holds an `Identifier` while the later expects concerete `Identifier`.
+/// In most cases, `validate_identifier_expression` is enough but 
+/// `FunctionLiteral` stores it's parameters directly in a `Vec<Identifier>`
+/// and we would need to do some shenanigans to upcast it to `Expression`
+/// if we wanted to use this function. Therefore there are two versions 
+/// of this function implemented here.
+pub fn validate_identifier_expression(expr: &Box<dyn Expression>, value: &str) {
+    let ident = get_and_assert_identifier(&expr);
+    _validate_identifier(ident, value)
+}
+
+pub fn validate_identifier(ident: &Identifier, value: &str) {
+    _validate_identifier(ident, value)
+}
+
+pub fn _validate_identifier(ident: &Identifier, value: &str) {
+    assert_eq!(
+        ident.value, value,
+        "exprected Identifier value to be `{}`, got=`{}`",
+        value, ident.value
+    );
+    assert_eq!(
+        ident.token_literal(),
+        value,
+        "expected Identifier token literal to be `{}`, got=`{}`",
+        value,
+        ident.token_literal()
     );
 }

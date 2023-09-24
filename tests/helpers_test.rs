@@ -39,14 +39,14 @@ mod helpers_test {
     }
 
     #[test]
-    fn test_validate_identifier_helper() {
+    fn test_validate_identifier_expression_helper() {
         let input = "x;";
         let mut parser = Parser::from_str(input);
         let program = parser.parse_program();
 
         assert_eq!(program.statements.len(), 1);
         let expr = get_and_assert_expression(&program.statements[0]);
-        validate_identifier(&expr, "x");
+        validate_identifier_expression(&expr, "x");
     }
 
     #[test]

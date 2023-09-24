@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::ast::{
     BlockStatement, Boolean, DummyExpression, Expression, ExpressionStatement, FloatLiteral,
-    Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, Node,
+    FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, Node,
     PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
@@ -61,6 +61,7 @@ impl Parser {
         parser.register_prefix(TokenType::FLOAT, Parser::parse_float_literal);
         parser.register_prefix(TokenType::LPAREN, Parser::parse_grouped_expressions);
         parser.register_prefix(TokenType::IF, Parser::parse_if_expression);
+        parser.register_prefix(TokenType::FUNCTION, Parser::parse_funtion_literal);
 
         parser.register_infix(TokenType::PLUS, Parser::parse_infix_expression);
         parser.register_infix(TokenType::MINUS, Parser::parse_infix_expression);
@@ -258,6 +259,67 @@ impl Parser {
         }
     }
 
+    fn parse_funtion_literal(&mut self) -> Option<Box<dyn Expression>> {
+        let cur_token = self.cur_token.clone(); // the `fn` token
+
+        // advance to the next token which should be `(`
+        if !self.expect_peek_and_advance(TokenType::LPAREN) {
+            self.errors.push(format!(
+                "Error while parsing function. Exprected next token to be `(`, got=`{}`",
+                self.cur_token.literal
+            ));
+            return None;
+        }
+
+        // advance to the next token which should be the start of parameters
+        self.next_token();
+        let mut parameters: Vec<Identifier> = Vec::new();
+
+        // until closing `)` is reached, the pattern should be
+        // `Identifier` followed by `,` except for the last
+        // `Identifier` that is followed by the closing `)`
+        loop {
+            if !self.cur_token_is(TokenType::IDENT) {
+                self.errors.push(format!("Error while parsing function parameters. Expected next token to be `Identifier`, got=`{}`", self.cur_token.literal));
+                return None;
+            }
+
+            let ident = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
+            parameters.push(ident);
+            self.next_token();
+
+            if !self.cur_token_is(TokenType::COMMA) && !self.cur_token_is(TokenType::RPAREN) {
+                self.errors.push(format!("Erorr while parsing function parameters. Expected next token to be `,` or `)`, got=`{}`", self.peek_token.literal));
+                return None;
+            }
+
+            // if we reach comma here, skip it and continue parsing parameters
+            if self.cur_token_is(TokenType::COMMA) {
+                self.next_token();
+            }
+
+            // if we reach `)` here, it means we're done parsing parameters
+            if self.cur_token_is(TokenType::RPAREN) {
+                break;
+            }
+        }
+
+        // advance to the next token which should be the start of
+        // function's body - `BlockStatement`
+        self.next_token();
+
+        let body = self.parse_block_statement();
+        if body.is_none() {
+            return None;
+        }
+
+        Some(Box::new(FunctionLiteral::new(
+            cur_token,
+            parameters,
+            body.unwrap(),
+        )))
+    }
+
     // Parse `if else` expression, `else` is optional.
     // `if else` is treated as expression which means that it evaluates
     //
@@ -346,6 +408,11 @@ impl Parser {
         }
     }
 
+    /// `BlockStatement` represents a collection of statements.
+    /// This functions returns None if either any of these statements
+    /// is invalid, resp. we were unable to parse it
+    /// or if there were no statements. Empty `BlockStatement` is
+    /// not allowed.
     pub fn parse_block_statement(&mut self) -> Option<BlockStatement> {
         let cur_token = self.cur_token.clone(); // storing `{` token
         let mut block_statements: Vec<Box<dyn Statement>> = Vec::new();
@@ -363,7 +430,10 @@ impl Parser {
         }
 
         if block_statements.len() == 0 {
-            self.errors.push("empty block statement".to_string());
+            self.errors.push(
+                "Error while parsing `BlockStatement`. Empty block statement is not allowed."
+                    .to_string(),
+            );
             return None;
         }
 

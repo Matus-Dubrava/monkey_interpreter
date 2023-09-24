@@ -4,7 +4,7 @@ mod helpers;
 mod parsers_tests {
     use std::any::Any;
 
-    use monkey_interpreter::ast::{Identifier, LetStatement, Node, Program, Statement};
+    use monkey_interpreter::ast::{Expression, Identifier, LetStatement, Node, Program, Statement};
     use monkey_interpreter::parser::Parser;
     use monkey_interpreter::token::{Token, TokenType};
 
@@ -270,6 +270,45 @@ mod parsers_tests {
     }
 
     #[test]
+    fn should_parse_function_literal() {
+        let input = "fn(x, y) { x + y; }";
+        let mut parser = Parser::from_str(&input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let function = get_and_assert_function_literal(expr);
+
+        // Validate function's parameters.
+        // There should be two identifiers: `x` and `y`.
+        assert_eq!(
+            function.parameters.len(),
+            2,
+            "
+            function expected `2` parameters, got=`{}`,
+            ",
+            function.parameters.len()
+        );
+
+        validate_identifier(&function.parameters[0], "x");
+        validate_identifier(&function.parameters[1], "y");
+
+        // Validate function's body. There should be one infix statement.
+        assert_eq!(
+            function.body.statements.len(),
+            1,
+            "expected function's body to have `1` statement, got=`{}`",
+            function.body.statements.len()
+        );
+
+        let expr = get_and_assert_expression(&function.body.statements[0]);
+        let left: Box<dyn Any> = Box::new("x");
+        let right: Box<dyn Any> = Box::new("y");
+        validate_infix_expression(expr, &left, "+".to_string(), &right);
+    }
+
+    #[test]
     fn should_parse_let_statements() {
         let input = "
         let x = 5;
@@ -340,7 +379,7 @@ mod parsers_tests {
         validate_program_length(&program, 1);
 
         let expr = get_and_assert_expression(&program.statements[0]);
-        validate_identifier(&expr, "foobar");
+        validate_identifier_expression(&expr, "foobar");
         assert_eq!(program.to_string(), "foobar");
     }
 
