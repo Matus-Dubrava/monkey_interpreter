@@ -566,18 +566,22 @@ impl Parser {
     }
 
     pub fn parse_return_statement(&mut self) -> Option<Box<dyn Statement>> {
-        let cur_token = self.cur_token.clone();
+        let cur_token = self.cur_token.clone(); // The `RETURN` token.
 
+        // Advance to the expression after `return` token;
         self.next_token();
 
-        // TODO: implement expression parsing
-        // for now, returning DummyExpression instead
-        self.skip_until_semicolon();
+        let expr = self.parse_expression(LOWEST);
+        if expr.is_none() {
+            return None;
+        }
 
-        Some(Box::new(ReturnStatement::new(
-            cur_token,
-            Box::new(DummyExpression),
-        )))
+        // Skip the `;` if there is one after return statement.
+        if self.peek_token_is(TokenType::SEMICOLON) {
+            self.next_token();
+        }
+
+        Some(Box::new(ReturnStatement::new(cur_token, expr.unwrap())))
     }
 
     pub fn parse_let_statement(&mut self) -> Option<Box<dyn Statement>> {
@@ -596,16 +600,24 @@ impl Parser {
             return None;
         }
 
-        // TODO: skipping expression until we encounter a semicolon
-        // for now, we are providing a dummy expression
-        self.skip_until_semicolon();
+        // Advance to the next token to start parsing expression that
+        // follows assignment.
+        self.next_token();
 
-        let dummy_expression = Box::new(DummyExpression);
+        let expr = self.parse_expression(LOWEST);
+        if expr.is_none() {
+            return None;
+        }
+
+        // Skip the semicolon if there is one after LetStatement.
+        if self.peek_token_is(TokenType::SEMICOLON) {
+            self.next_token();
+        }
 
         Some(Box::new(LetStatement::new(
             cur_token,
             identifier,
-            dummy_expression,
+            expr.unwrap(),
         )))
     }
 

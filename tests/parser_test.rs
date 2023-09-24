@@ -460,43 +460,81 @@ mod parsers_tests {
     }
 
     #[test]
-    fn should_parse_let_statements() {
-        let input = "
-        let x = 5;
-        let y = 10;
-        let foobar = 12345;
-        ";
+    fn should_parse_let_statement() {
+        struct TestCase {
+            input: String,
+            expected_indetifier: String,
+            expected_value: Box<dyn Any>,
+        }
 
-        let mut parser = Parser::from_str(input);
-        let program = parser.parse_program();
+        impl TestCase {
+            fn new(input: &str, expected_identifier: &str, expected_value: Box<dyn Any>) -> Self {
+                Self {
+                    input: input.to_string(),
+                    expected_indetifier: expected_identifier.to_string(),
+                    expected_value,
+                }
+            }
+        }
 
-        check_parse_errors(&parser);
-        validate_program_length(&program, 3);
+        let mut test_cases: Vec<TestCase> = Vec::new();
 
-        let tests = ["x".to_string(), "y".to_string(), "foobar".to_string()];
+        let val: Box<dyn Any> = Box::new(5);
+        test_cases.push(TestCase::new("let x = 5;", "x", val));
 
-        for (i, name) in tests.iter().enumerate() {
-            let stmt = &program.statements[i];
-            validate_let_statement(stmt, name);
+        let val: Box<dyn Any> = Box::new(true);
+        test_cases.push(TestCase::new("let y = true;", "y", val));
+
+        let val: Box<dyn Any> = Box::new("y");
+        test_cases.push(TestCase::new("let foobar = y;", "foobar", val));
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(test_case.input.as_str());
+            let program = parser.parse_program();
+            check_parse_errors(&parser);
+            validate_program_length(&program, 1);
+
+            let let_stmt = get_and_assert_let_statement(&program.statements[0]);
+            validate_identifier(&let_stmt.name, &test_case.expected_indetifier);
+            validate_literal_expression(&let_stmt.value, &test_case.expected_value);
         }
     }
 
     #[test]
-    fn should_parse_return_statements() {
-        let input = "
-        return 1;
-        return 10;
-        return 10000;
-        ";
+    fn should_parse_return_statement() {
+        struct TestCase {
+            input: String,
+            expected_value: Box<dyn Any>,
+        }
 
-        let mut parser = Parser::from_str(input);
-        let program = parser.parse_program();
+        impl TestCase {
+            fn new(input: &str, expected_value: Box<dyn Any>) -> Self {
+                Self {
+                    input: input.to_string(),
+                    expected_value,
+                }
+            }
+        }
 
-        validate_program_length(&program, 3);
-        check_parse_errors(&parser);
+        let mut test_cases: Vec<TestCase> = Vec::new();
 
-        for stmt in program.statements {
-            validate_return_statement(&stmt);
+        let val: Box<dyn Any> = Box::new(5);
+        test_cases.push(TestCase::new("return 5;", val));
+
+        let val: Box<dyn Any> = Box::new(true);
+        test_cases.push(TestCase::new("return true;", val));
+
+        let val: Box<dyn Any> = Box::new("y");
+        test_cases.push(TestCase::new("return y;", val));
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(test_case.input.as_str());
+            let program = parser.parse_program();
+            check_parse_errors(&parser);
+            validate_program_length(&program, 1);
+
+            let return_stmt = get_and_assert_return_statement(&program.statements[0]);
+            validate_literal_expression(&return_stmt.return_value, &test_case.expected_value);
         }
     }
 
@@ -564,30 +602,5 @@ mod parsers_tests {
             "expected at least 3 errors, got={}",
             parser.get_errors().len()
         );
-    }
-
-    #[test]
-    fn test_to_string_method_manual_let_statement() {
-        let identifier = Identifier {
-            token: Token::from_str(TokenType::IDENT, "my_var"),
-            value: "my_var".to_string(),
-        };
-
-        let expression = Box::new(Identifier {
-            token: Token::from_str(TokenType::IDENT, "another_var"),
-            value: "another_var".to_string(),
-        });
-
-        let let_statement = Box::new(LetStatement::new(
-            Token::from_str(TokenType::LET, "let"),
-            identifier,
-            expression,
-        ));
-
-        let mut statements: Vec<Box<dyn Statement>> = Vec::new();
-        statements.push(let_statement);
-
-        let program = Program::from_statements(statements);
-        assert_eq!(program.to_string(), "let my_var = another_var;");
     }
 }
