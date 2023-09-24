@@ -259,10 +259,18 @@ impl Parser {
         }
     }
 
+    /// General form of `FunctionLiteral` is
+    ///     fn(<parameters>) { <statements> }
+    /// where
+    ///     <parameters> is a `Vec<Identifier>`  
+    ///     <statements> is a `BlockStatement`
+    /// This function returns None if anything fails during parsing.
+    /// Note that currently the enclosing parentheses are required.
     fn parse_funtion_literal(&mut self) -> Option<Box<dyn Expression>> {
-        let cur_token = self.cur_token.clone(); // the `fn` token
+        let cur_token = self.cur_token.clone(); // The `fn` token.
+        let mut parameters: Vec<Identifier> = Vec::new();
 
-        // advance to the next token which should be `(`
+        // Advance to the next token which should be the opening `(`.
         if !self.expect_peek_and_advance(TokenType::LPAREN) {
             self.errors.push(format!(
                 "Error while parsing function. Exprected next token to be `(`, got=`{}`",
@@ -271,13 +279,14 @@ impl Parser {
             return None;
         }
 
-        // advance to the next token which should be the start of parameters
+        // Advance to the next token which should be the start of parameters.
+        // Reps. it should be the first `Identifier` in the parameter list.
         self.next_token();
-        let mut parameters: Vec<Identifier> = Vec::new();
 
-        // until closing `)` is reached, the pattern should be
+        // Start parsing function parameters.
+        // Until the closing `)` is reached, the pattern should be
         // `Identifier` followed by `,` except for the last
-        // `Identifier` that is followed by the closing `)`
+        // `Identifier` that is followed by the closing `)`.
         loop {
             if !self.cur_token_is(TokenType::IDENT) {
                 self.errors.push(format!("Error while parsing function parameters. Expected next token to be `Identifier`, got=`{}`", self.cur_token.literal));
@@ -293,21 +302,23 @@ impl Parser {
                 return None;
             }
 
-            // if we reach comma here, skip it and continue parsing parameters
+            // If we reach comma here, skip it and continue parsing parameters.
             if self.cur_token_is(TokenType::COMMA) {
                 self.next_token();
             }
 
-            // if we reach `)` here, it means we're done parsing parameters
+            // If we reach the closing `)` here, it means we're done parsing parameters.
             if self.cur_token_is(TokenType::RPAREN) {
                 break;
             }
         }
 
-        // advance to the next token which should be the start of
-        // function's body - `BlockStatement`
+        // Advance to the next token which should be the start of
+        // function's body, resp. a `BlockStatement`.
         self.next_token();
 
+        // If `parse_block_statements` returns None, it means that it
+        // failed and we need to return None from this function as well.
         let body = self.parse_block_statement();
         if body.is_none() {
             return None;
