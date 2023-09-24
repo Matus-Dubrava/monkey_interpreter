@@ -425,6 +425,48 @@ impl IfExpression {
     }
 }
 
+pub struct FunctionExpression {
+    pub token: Token, // the `fn` token
+    pub parameters: Vec<Identifier>,
+    pub body: BlockStatement,
+}
+
+impl Expression for FunctionExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn expression_node(&self) {}
+}
+
+impl Node for FunctionExpression {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+
+    fn to_string(&self) -> String {
+        let mut s = String::from("fn (");
+        for (i, param) in self.parameters.iter().enumerate() {
+            if i == self.parameters.len() - 1 {
+                s += param.to_string().as_str();
+            } else {
+                s += format!("{}, ", param.to_string()).as_str();
+            }
+        }
+        s += self.body.to_string().as_str();
+        return s;
+    }
+}
+
+impl FunctionExpression {
+    pub fn new(token: Token, parameters: Vec<Identifier>, body: BlockStatement) -> Self {
+        Self {
+            token,
+            parameters,
+            body,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Boolean {
     pub token: Token,
