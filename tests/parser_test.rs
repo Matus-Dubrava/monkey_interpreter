@@ -282,17 +282,11 @@ mod parsers_tests {
 
         // Validate function's parameters.
         // There should be two identifiers: `x` and `y`.
-        assert_eq!(
-            function.parameters.len(),
-            2,
-            "
-            function expected `2` parameters, got=`{}`,
-            ",
-            function.parameters.len()
-        );
-
-        validate_identifier(&function.parameters[0], "x");
-        validate_identifier(&function.parameters[1], "y");
+        let expected_params = Vec::from(["x", "y"])
+            .iter()
+            .map(|&s| s.to_string())
+            .collect();
+        validate_function_parameters(&function.parameters, &expected_params);
 
         // Validate function's body. There should be one infix statement.
         assert_eq!(
@@ -306,6 +300,40 @@ mod parsers_tests {
         let left: Box<dyn Any> = Box::new("x");
         let right: Box<dyn Any> = Box::new("y");
         validate_infix_expression(expr, &left, "+".to_string(), &right);
+    }
+
+    #[test]
+    fn should_parse_function_parameters() {
+        struct TestCase {
+            input: String,
+            expected_params: Vec<String>,
+        }
+
+        impl TestCase {
+            fn new(input: &str, expected_params: Vec<&str>) -> Self {
+                Self {
+                    input: input.to_string(),
+                    expected_params: expected_params.iter().map(|&s| s.to_string()).collect(),
+                }
+            }
+        }
+
+        let test_cases = Vec::from([
+            TestCase::new("fn() { x };", Vec::new()),
+            TestCase::new("fn(x) { x };", Vec::from(["x"])),
+            TestCase::new("fn(x, y, z) { x };", Vec::from(["x", "y", "z"])),
+        ]);
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(&test_case.input);
+            let program = parser.parse_program();
+            check_parse_errors(&parser);
+
+            let expr = get_and_assert_expression(&program.statements[0]);
+            let function = get_and_assert_function_literal(expr);
+
+            validate_function_parameters(&function.parameters, &test_case.expected_params);
+        }
     }
 
     #[test]

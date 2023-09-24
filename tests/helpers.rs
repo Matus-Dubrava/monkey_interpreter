@@ -337,3 +337,14 @@ pub fn _validate_identifier(ident: &Identifier, value: &str) {
         ident.token_literal()
     );
 }
+
+pub fn validate_function_parameters(parameters: &Vec<Identifier>, expected_parameters: &Vec<String>) {
+    assert_eq!(parameters.len(), expected_parameters.len(), 
+        "Expected `{}` functions parameters, got=`{}`",
+        expected_parameters.len(), parameters.len()
+    );
+
+    for (param, expected_param) in parameters.iter().zip(expected_parameters.iter()) {
+        validate_identifier(param, &expected_param);
+    }
+}

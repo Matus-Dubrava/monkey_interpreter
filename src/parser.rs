@@ -262,8 +262,11 @@ impl Parser {
     /// General form of `FunctionLiteral` is
     ///     fn(<parameters>) { <statements> }
     /// where
-    ///     <parameters> is a `Vec<Identifier>`  
+    ///     <parameters> is a `Vec<Identifier>`   
     ///     <statements> is a `BlockStatement`
+    ///
+    /// <parameters> can be empty, i.e. fn() {...} is allowed.
+    ///
     /// This function returns None if anything fails during parsing.
     /// Note that currently the enclosing parentheses are required.
     fn parse_funtion_literal(&mut self) -> Option<Box<dyn Expression>> {
@@ -279,37 +282,40 @@ impl Parser {
             return None;
         }
 
-        // Advance to the next token which should be the start of parameters.
-        // Reps. it should be the first `Identifier` in the parameter list.
+        // Advance to the next token. This should either be an `Identifier`
+        // if there are any parameters, or it should be closing `)` if
+        // this function doesn't take any parameters.
         self.next_token();
 
-        // Start parsing function parameters.
-        // Until the closing `)` is reached, the pattern should be
-        // `Identifier` followed by `,` except for the last
-        // `Identifier` that is followed by the closing `)`.
-        loop {
-            if !self.cur_token_is(TokenType::IDENT) {
-                self.errors.push(format!("Error while parsing function parameters. Expected next token to be `Identifier`, got=`{}`", self.cur_token.literal));
-                return None;
-            }
+        if !self.cur_token_is(TokenType::RPAREN) {
+            // Start parsing function parameters.
+            // Until the closing `)` is reached, the pattern should be
+            // `Identifier` followed by `,` except for the last
+            // `Identifier` that is followed by the closing `)`.
+            loop {
+                if !self.cur_token_is(TokenType::IDENT) {
+                    self.errors.push(format!("Error while parsing function parameters. Expected next token to be `Identifier`, got=`{}`", self.cur_token.literal));
+                    return None;
+                }
 
-            let ident = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
-            parameters.push(ident);
-            self.next_token();
-
-            if !self.cur_token_is(TokenType::COMMA) && !self.cur_token_is(TokenType::RPAREN) {
-                self.errors.push(format!("Erorr while parsing function parameters. Expected next token to be `,` or `)`, got=`{}`", self.peek_token.literal));
-                return None;
-            }
-
-            // If we reach comma here, skip it and continue parsing parameters.
-            if self.cur_token_is(TokenType::COMMA) {
+                let ident = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
+                parameters.push(ident);
                 self.next_token();
-            }
 
-            // If we reach the closing `)` here, it means we're done parsing parameters.
-            if self.cur_token_is(TokenType::RPAREN) {
-                break;
+                if !self.cur_token_is(TokenType::COMMA) && !self.cur_token_is(TokenType::RPAREN) {
+                    self.errors.push(format!("Erorr while parsing function parameters. Expected next token to be `,` or `)`, got=`{}`", self.peek_token.literal));
+                    return None;
+                }
+
+                // If we reach comma here, skip it and continue parsing parameters.
+                if self.cur_token_is(TokenType::COMMA) {
+                    self.next_token();
+                }
+
+                // If we reach the closing `)` here, it means we're done parsing parameters.
+                if self.cur_token_is(TokenType::RPAREN) {
+                    break;
+                }
             }
         }
 
