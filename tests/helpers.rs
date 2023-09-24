@@ -94,6 +94,12 @@ pub fn get_and_assert_function_literal(expr: &Box<dyn Expression>) -> &FunctionL
     return fn_literal.unwrap();
 }
 
+pub fn get_and_assert_call_expression(expr: &Box<dyn Expression>) -> &CallExpression {
+    let call_expr = expr.as_any().downcast_ref::<CallExpression>();
+    assert!(call_expr.is_some(), "expected expression to be CallExpression");
+    return call_expr.unwrap();
+}
+
 pub fn check_parse_errors(parser: &Parser) {
     let errors = parser.get_errors();
 
@@ -347,4 +353,15 @@ pub fn validate_function_parameters(parameters: &Vec<Identifier>, expected_param
     for (param, expected_param) in parameters.iter().zip(expected_parameters.iter()) {
         validate_identifier(param, &expected_param);
     }
+}
+
+/// Used to validate length of `CallExpression`'s argument list.
+pub fn validate_argument_list_length(actual: usize, expected: usize) {
+    assert_eq!(
+        actual,
+        expected,
+        "expected `{}` call arguments, got=`{}`",
+        actual,
+        expected,
+    );
 }

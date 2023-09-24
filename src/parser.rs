@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use crate::ast::{
-    BlockStatement, Boolean, DummyExpression, Expression, ExpressionStatement, FloatLiteral,
-    FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, Node,
-    PrefixExpression, Program, ReturnStatement, Statement,
+    BlockStatement, Boolean, CallExpression, DummyExpression, Expression, ExpressionStatement,
+    FloatLiteral, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral,
+    LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
@@ -71,6 +71,7 @@ impl Parser {
         parser.register_infix(TokenType::NOTEQ, Parser::parse_infix_expression);
         parser.register_infix(TokenType::LT, Parser::parse_infix_expression);
         parser.register_infix(TokenType::GT, Parser::parse_infix_expression);
+        parser.register_infix(TokenType::LPAREN, Parser::parse_call_expression);
 
         parser
     }
@@ -90,8 +91,8 @@ impl Parser {
         map.insert(TokenType::MINUS, SUM);
         map.insert(TokenType::SLASH, PRODUCT);
         map.insert(TokenType::ASTERISK, PRODUCT);
-
-        map
+        map.insert(TokenType::LPAREN, CALL);
+        return map;
     }
 
     /// returns precedence of next token
@@ -257,6 +258,62 @@ impl Parser {
         } else {
             None
         }
+    }
+
+    /// Parse call expression is infix expression where the significant token
+    /// denoting this expression is `(`. Expression before this token is
+    /// either the name of the function, resp. an `Identifier`
+    ///     add(1, 2)
+    /// or it is function expressions
+    ///     fn(x, y) { x + y }(1, 2)
+    ///
+    /// In either case, this function parses only the call expression that
+    /// follows `(`, rest is handled by general `parse_expression` function.
+    ///
+    /// Therefore, here we only need to parse the argument list itself.
+    /// Note that this list can be empty.
+    fn parse_call_expression(
+        &mut self,
+        function: Box<dyn Expression>,
+    ) -> Option<Box<dyn Expression>> {
+        let mut args: Vec<Box<dyn Expression>> = Vec::new();
+        let cur_token = self.cur_token.clone();
+
+        if self.peek_token_is(TokenType::RPAREN) {
+            self.next_token();
+            return Some(Box::new(CallExpression::new(cur_token, function, args)));
+        }
+
+        loop {
+            // Advance token to start parsing arguments, or to skip current
+            // `,` separating argument expressions.
+            self.next_token();
+            let arg = self.parse_expression(LOWEST);
+            if arg.is_none() {
+                self.errors.push(format!("Error while parsing call expression arguments. Failed to parse argument, current token is `{}`", &self.cur_token.literal));
+                return None;
+            }
+            args.push(arg.unwrap());
+
+            // Advance token, expecting either `)` signifying the end of argument
+            // list, or a `,` separating arguments.
+            self.next_token();
+
+            if !self.cur_token_is(TokenType::RPAREN) && !self.cur_token_is(TokenType::COMMA) {
+                self.errors.push(format!(
+                    "Error while parsing call expression arguments. Expected `,` or `)`, got=`{}`",
+                    &self.cur_token.literal
+                ));
+                return None;
+            }
+
+            // Exit loop when closing ')' is found.
+            if self.cur_token_is(TokenType::RPAREN) {
+                break;
+            }
+        }
+
+        return Some(Box::new(CallExpression::new(cur_token, function, args)));
     }
 
     /// General form of `FunctionLiteral` is

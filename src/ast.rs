@@ -461,6 +461,54 @@ impl FunctionLiteral {
     }
 }
 
+pub struct CallExpression {
+    pub token: Token, // The `(` token signifying the start of the argument list.
+    // Either a `FunctionLiteral` or an `Identifier`
+    //      `FunctionLiteral`   fn(x, y) { x + y }(1, 2)
+    //      `Identifier`        add(1, 2)
+    pub function: Box<dyn Expression>,
+    pub arguments: Vec<Box<dyn Expression>>,
+}
+
+impl Expression for CallExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn expression_node(&self) {}
+}
+
+impl Node for CallExpression {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+
+    fn to_string(&self) -> String {
+        format!(
+            "{}({})",
+            self.function.to_string(),
+            self.arguments
+                .iter()
+                .map(|arg| format!("{}, ", arg.to_string()))
+                .collect::<String>()
+                .trim_end_matches(", ")
+        )
+    }
+}
+
+impl CallExpression {
+    pub fn new(
+        token: Token,
+        function: Box<dyn Expression>,
+        arguments: Vec<Box<dyn Expression>>,
+    ) -> Self {
+        Self {
+            token,
+            function,
+            arguments,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Boolean {
     pub token: Token,

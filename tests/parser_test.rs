@@ -346,6 +346,109 @@ mod parsers_tests {
     }
 
     #[test]
+    fn should_parse_call_expression_starting_with_literal() {
+        let input = "add(1, 2 * 3, 4 + 5)";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let call_expr = get_and_assert_call_expression(expr);
+
+        validate_identifier_expression(&call_expr.function, "add");
+        validate_argument_list_length(call_expr.arguments.len(), 3);
+
+        let val: Box<dyn Any> = Box::new(1);
+        validate_literal_expression(&call_expr.arguments[0], &val);
+
+        let left: Box<dyn Any> = Box::new(2);
+        let right: Box<dyn Any> = Box::new(3);
+        validate_infix_expression(&call_expr.arguments[1], &left, "*".to_string(), &right);
+
+        let left: Box<dyn Any> = Box::new(4);
+        let right: Box<dyn Any> = Box::new(5);
+        validate_infix_expression(&call_expr.arguments[2], &left, "+".to_string(), &right);
+    }
+
+    #[test]
+    fn should_parse_call_expression_strting_with_function_literal() {
+        let input = "fn(a, b) { a + b }(1, 2)";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let call_expr = get_and_assert_call_expression(expr);
+
+        let function = get_and_assert_function_literal(&call_expr.function);
+        validate_function_parameters(
+            &function.parameters,
+            &Vec::from(["a".to_string(), "b".to_string()]),
+        );
+
+        validate_argument_list_length(call_expr.arguments.len(), 2);
+
+        let val: Box<dyn Any> = Box::new(1);
+        validate_literal_expression(&call_expr.arguments[0], &val);
+
+        let val: Box<dyn Any> = Box::new(2);
+        validate_literal_expression(&call_expr.arguments[1], &val);
+    }
+
+    #[test]
+    fn should_parse_call_expression_with_empty_argument_list() {
+        let input = "print()";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let call_expr = get_and_assert_call_expression(expr);
+
+        validate_identifier_expression(&call_expr.function, "print");
+        validate_argument_list_length(call_expr.arguments.len(), 0);
+    }
+
+    #[test]
+    fn should_parser_call_expression_with_arguments_that_themselves_are_call_expressions() {
+        let input = "add(subtract(1, 99.11), fn(x, y) {x + y}(1, 2))";
+        let mut parser = Parser::from_str(input);
+        let program = parser.parse_program();
+        check_parse_errors(&parser);
+        validate_program_length(&program, 1);
+
+        let expr = get_and_assert_expression(&program.statements[0]);
+        let call_expr = get_and_assert_call_expression(expr);
+        validate_identifier_expression(&call_expr.function, "add");
+        validate_argument_list_length(call_expr.arguments.len(), 2);
+
+        // validate add(1, 2) call expression
+        let call_expr_arg_1 = get_and_assert_call_expression(&call_expr.arguments[0]);
+        validate_identifier_expression(&call_expr_arg_1.function, "subtract");
+        validate_argument_list_length(call_expr_arg_1.arguments.len(), 2);
+        validate_integer_literal(&call_expr_arg_1.arguments[0], 1);
+        validate_float_literal(&call_expr_arg_1.arguments[1], 99.11);
+
+        // validate fn(x, y) {x + y}(1, 2)
+        let call_expr_arg_2 = get_and_assert_call_expression(&call_expr.arguments[1]);
+        validate_argument_list_length(call_expr_arg_2.arguments.len(), 2);
+        let function = get_and_assert_function_literal(&call_expr_arg_2.function);
+        validate_function_parameters(
+            &function.parameters,
+            &Vec::from(["x".to_string(), "y".to_string()]),
+        );
+        let left: Box<dyn Any> = Box::new("x");
+        let right: Box<dyn Any> = Box::new("y");
+        let body_expr = get_and_assert_expression(&function.body.statements[0]);
+        validate_infix_expression(&body_expr, &left, "+".to_string(), &right);
+        validate_integer_literal(&call_expr_arg_2.arguments[0], 1);
+        validate_integer_literal(&call_expr_arg_2.arguments[1], 2);
+    }
+
+    #[test]
     fn should_parse_let_statements() {
         let input = "
         let x = 5;
