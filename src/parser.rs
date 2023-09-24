@@ -570,8 +570,14 @@ impl Parser {
         }
     }
 
+    /// Skip parsing of current statement, resp. until a `;` or EOF is
+    /// reached.
+    /// Note that this is a helper function that is not really used in
+    /// parsing out the real program. Its helps in cases when
+    /// implementation of certain feature is missing and we want to
+    /// skip to the end of current statement.
     pub fn skip_until_semicolon(&mut self) {
-        while !self.cur_token_is(TokenType::SEMICOLON) {
+        while !self.cur_token_is(TokenType::SEMICOLON) && !self.cur_token_is(TokenType::EOF) {
             self.next_token();
         }
     }

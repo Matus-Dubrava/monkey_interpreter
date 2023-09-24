@@ -101,3 +101,9 @@ impl Token {
         }
     }
 }
+
+impl ToString for Token {
+    fn to_string(&self) -> String {
+        format!("[`{}`: `{}`]", self.r#type.to_string(), self.literal)
+    }
+}

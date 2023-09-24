@@ -396,7 +396,7 @@ impl Node for IfExpression {
         ));
 
         if self.alternative.is_some() {
-            s += format!("else {}", self.alternative.as_ref().unwrap().to_string()).as_str();
+            s += format!(" else {}", self.alternative.as_ref().unwrap().to_string()).as_str();
         }
 
         return s;
