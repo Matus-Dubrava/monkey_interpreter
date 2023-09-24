@@ -1,41 +1,34 @@
 use std::io::Write;
 
-use crate::lexer::Lexer;
-use crate::token::{Token, TokenType};
+use crate::ast::Node;
+use crate::parser::Parser;
 
 pub fn start_repl() {
     let mut input = String::new();
 
     loop {
+        // It is essential to clear the input buffer here, otherwise the
+        // input will just keep accumulating and if there are any errors,
+        // all subsequent requests will fail.
+        input.clear();
         print!(">> ");
         std::io::stdout().flush().expect("failed to flush stdout");
 
         match std::io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => {
-                let mut lex = Lexer::new(&input);
-                let mut tokens: Vec<Token> = Vec::new();
+                let mut parser = Parser::from_str(&input);
+                let program = parser.parse_program();
 
-                loop {
-                    // add null character so that lexer knows when to stop
-                    input += &'\0'.to_string();
-
-                    let tok = lex.next_token();
-                    tokens.push(tok.clone());
-
-                    if tok.r#type == TokenType::EOF {
-                        break;
+                // Check for parsing errors, print them if there are any.
+                if parser.get_errors().len() != 0 {
+                    for err in parser.get_errors() {
+                        println!("{err}");
                     }
+                    continue;
                 }
 
-                // print all of the tokens except for the last one
-                // that was artifically added to the user input
-                // so that the lexer knows when to stop reading
-                for (index, tok) in tokens.iter().enumerate() {
-                    if index < tokens.len() - 1 {
-                        println!("{tok:?}");
-                    }
-                }
+                println!("{}", program.to_string());
             }
             Err(err) => println!("error: {err}"),
         }

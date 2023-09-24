@@ -120,6 +120,7 @@ impl Parser {
         self.infix_parse_fns.insert(token_type, fun);
     }
 
+    /// Return a list of errors that were recorded during parsing.
     pub fn get_errors(&self) -> &Vec<String> {
         &self.errors
     }
