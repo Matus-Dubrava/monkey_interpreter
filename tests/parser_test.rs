@@ -322,6 +322,14 @@ mod parsers_tests {
             TestCase::new("fn() { x };", Vec::new()),
             TestCase::new("fn(x) { x };", Vec::from(["x"])),
             TestCase::new("fn(x, y, z) { x };", Vec::from(["x", "y", "z"])),
+            TestCase::new(
+                "fn(my_var, another_var) {};",
+                Vec::from(["my_var", "another_var"]),
+            ),
+            TestCase::new(
+                "fn(MyVar, AnotherVar) {};",
+                Vec::from(["MyVar", "AnotherVar"]),
+            ),
         ]);
 
         for test_case in test_cases {

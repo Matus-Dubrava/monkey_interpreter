@@ -426,32 +426,35 @@ impl Parser {
     }
 
     /// `BlockStatement` represents a collection of statements.
-    /// This functions returns None if either any of these statements
-    /// is invalid, resp. we were unable to parse it
-    /// or if there were no statements. Empty `BlockStatement` is
-    /// not allowed.
+    /// This functions returns `None` if any of these statements
+    /// is invalid, resp. if parser failed to parse any of them.
     pub fn parse_block_statement(&mut self) -> Option<BlockStatement> {
-        let cur_token = self.cur_token.clone(); // storing `{` token
+        let cur_token = self.cur_token.clone(); // The opening `{` token.
         let mut block_statements: Vec<Box<dyn Statement>> = Vec::new();
 
-        // advance to the next token after `{` to start parsing statements
+        // Advance to the next token after `{` to start parsing statements.
         self.next_token();
 
-        while !self.cur_token_is(TokenType::RBRACE) && !self.cur_token_is(TokenType::EOF) {
+        // Note on the commented line. Don't think that we should allow
+        // this loop to reach EOF without failing, we expect the closing `}`.
+
+        // while !self.cur_token_is(TokenType::RBRACE) && !self.cur_token_is(TokenType::EOF)
+        while !self.cur_token_is(TokenType::RBRACE) {
             let stmt = self.parse_statement();
 
             if stmt.is_some() {
                 block_statements.push(stmt.unwrap());
+            } else {
+                self.errors.push(format!(
+                    "Error while parsing `BlockStatement`. Expected `Statement`, got=`{}`",
+                    self.cur_token.literal
+                ));
+                return None;
             }
-            self.next_token();
-        }
 
-        if block_statements.len() == 0 {
-            self.errors.push(
-                "Error while parsing `BlockStatement`. Empty block statement is not allowed."
-                    .to_string(),
-            );
-            return None;
+            // Go to the next token which should either be a start of another
+            // statement, or a closing `}`.
+            self.next_token();
         }
 
         Some(BlockStatement::new(cur_token, block_statements))
