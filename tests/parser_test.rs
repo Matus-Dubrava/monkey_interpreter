@@ -38,7 +38,7 @@ mod parsers_tests {
                 "a + b * c + d / e - f",
                 "(((a + (b * c)) + (d / e)) - f)",
             ),
-            OperatorPrecedenenceTest::new("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+            OperatorPrecedenenceTest::new("3 + 4; -5 * 5", "(3 + 4); ((-5) * 5)"),
             OperatorPrecedenenceTest::new("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
             OperatorPrecedenenceTest::new("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
             OperatorPrecedenenceTest::new(
@@ -61,11 +61,12 @@ mod parsers_tests {
             let program = parser.parse_program();
             check_parse_errors(&parser);
 
-            let program_string = program.to_string();
             assert_eq!(
-                program_string, test_case.expected,
+                program.to_string().trim_end_matches(";"),
+                test_case.expected,
                 "expected parsed program string to be {}, got={}",
-                test_case.expected, program_string
+                test_case.expected,
+                program.to_string().trim_end_matches(";")
             );
         }
     }
@@ -111,11 +112,11 @@ mod parsers_tests {
             validate_prefix_expression(expr, test_case.operator, &test_case.right);
 
             assert_eq!(
-                program.to_string(),
+                program.to_string().trim_end_matches(";"),
                 format!("({})", &test_case.input),
                 "expected program to be `{}`, got=`{}`",
                 format!("({})", &test_case.input),
-                program.to_string()
+                program.to_string().trim_end_matches(";")
             );
         }
     }
@@ -186,11 +187,11 @@ mod parsers_tests {
             validate_infix_expression(expr, &test_case.left, test_case.operator, &test_case.right);
 
             assert_eq!(
-                program.to_string(),
+                program.to_string().trim_end_matches(";"),
                 format!("({})", test_case.input),
                 "expected program to be `{}`, got=`{}`",
                 format!("({})", test_case.input),
-                program.to_string()
+                program.to_string().trim_end_matches(";")
             )
         }
     }
@@ -416,7 +417,7 @@ mod parsers_tests {
 
         let expr = get_and_assert_expression(&program.statements[0]);
         validate_identifier_expression(&expr, "foobar");
-        assert_eq!(program.to_string(), "foobar");
+        assert_eq!(program.to_string().trim_end_matches(";"), "foobar");
     }
 
     #[test]
@@ -430,7 +431,7 @@ mod parsers_tests {
 
         let expr = get_and_assert_expression(&program.statements[0]);
         validate_integer_literal(&expr, 5);
-        assert_eq!(program.to_string(), "5");
+        assert_eq!(program.to_string().trim_end_matches(";"), "5");
     }
 
     #[test]

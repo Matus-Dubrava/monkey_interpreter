@@ -1,4 +1,4 @@
-use crate::token::{self, Token};
+use crate::token::Token;
 use std::any::Any;
 
 pub trait Node {
@@ -157,20 +157,18 @@ impl Node for Program {
     }
 
     fn to_string(&self) -> String {
-        let mut buf = String::new();
-
-        for stmt in &self.statements {
-            buf += &stmt.to_string();
-        }
-
-        buf
+        self.statements
+            .iter()
+            .map(|stmt| format!("{}; ", stmt.to_string()))
+            .collect::<String>()
+            .trim_end()
+            .to_string()
     }
 }
 
 impl Program {
     pub fn new() -> Self {
         let statements: Vec<Box<dyn Statement>> = Vec::new();
-
         Program { statements }
     }
 
@@ -288,16 +286,12 @@ impl Node for LetStatement {
     }
 
     fn to_string(&self) -> String {
-        let mut buf = String::new();
-
-        buf += self.token_literal();
-        buf += " ";
-        buf += &self.name.to_string();
-        buf += " = ";
-        buf += &self.value.to_string();
-        buf += ";";
-
-        buf
+        format!(
+            "{} {} = {}",
+            self.token_literal(),
+            &self.name.to_string(),
+            &self.value.to_string()
+        )
     }
 }
 
@@ -325,14 +319,11 @@ impl Node for ReturnStatement {
     }
 
     fn to_string(&self) -> String {
-        let mut buf = String::new();
-
-        buf += self.token_literal();
-        buf += " ";
-        buf += &self.return_value.to_string();
-        buf += ";";
-
-        buf
+        format!(
+            "{} {}",
+            self.token_literal(),
+            &self.return_value.to_string()
+        )
     }
 }
 
@@ -346,7 +337,7 @@ impl ReturnStatement {
 }
 
 pub struct BlockStatement {
-    pub token: Token, // the `{` token since this is the token that denotes start of the block expression
+    pub token: Token, // The '{' token, signifying the start of the block statement.
     pub statements: Vec<Box<dyn Statement>>,
 }
 
@@ -362,11 +353,14 @@ impl Node for BlockStatement {
         &self.token.literal
     }
     fn to_string(&self) -> String {
-        let mut s = String::new();
-        for stmt in &self.statements {
-            s += &stmt.to_string();
-        }
-        return s;
+        format!(
+            "{{ {}}}",
+            self.statements
+                .iter()
+                .map(|stmt| format!("{}; ", stmt.to_string()))
+                .collect::<String>()
+                .to_string()
+        )
     }
 }
 
@@ -377,7 +371,7 @@ impl BlockStatement {
 }
 
 pub struct IfExpression {
-    pub token: Token, // the `if` token
+    pub token: Token, // The `if` token.
     pub condition: Box<dyn Expression>,
     pub consequence: BlockStatement,
     pub alternative: Option<BlockStatement>,
@@ -426,7 +420,7 @@ impl IfExpression {
 }
 
 pub struct FunctionLiteral {
-    pub token: Token, // the `fn` token
+    pub token: Token, // The `fn` token.
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
 }
@@ -444,17 +438,16 @@ impl Node for FunctionLiteral {
     }
 
     fn to_string(&self) -> String {
-        let mut s = String::from("fn (");
-        for (i, param) in self.parameters.iter().enumerate() {
-            if i == self.parameters.len() - 1 {
-                s += param.to_string().as_str();
-            } else {
-                s += format!("{}, ", param.to_string()).as_str();
-            }
-        }
-        s += ") ";
-        s += self.body.to_string().as_str();
-        return s;
+        format!(
+            "fn({}) {}",
+            &self
+                .parameters
+                .iter()
+                .map(|param| format!("{}, ", param.to_string()))
+                .collect::<String>()
+                .trim_end_matches(", "),
+            self.body.to_string()
+        )
     }
 }
 

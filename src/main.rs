@@ -9,7 +9,7 @@ use repl::start_repl;
 fn main() -> Result<(), color_eyre::Report> {
     color_eyre::install()?;
 
-    start_repl();
+    // start_repl();
 
     Ok(())
 }
