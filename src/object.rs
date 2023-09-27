@@ -1,4 +1,6 @@
-enum ObjectType {
+use std::any::Any;
+
+pub enum ObjectType {
     INTEGER_OBJ,
     BOOLEAN_OBJ,
     FLOAT_OBJ,
@@ -16,13 +18,14 @@ impl ToString for ObjectType {
     }
 }
 
-trait Object {
+pub trait Object {
     fn get_type(&self) -> ObjectType;
     fn inspect(&self) -> String;
+    fn as_any(&self) -> &dyn Any;
 }
 
-struct Integer {
-    value: i64,
+pub struct Integer {
+    pub value: i64,
 }
 
 impl Object for Integer {
@@ -33,10 +36,14 @@ impl Object for Integer {
     fn get_type(&self) -> ObjectType {
         return ObjectType::INTEGER_OBJ;
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
-struct Boolean {
-    value: bool,
+pub struct Boolean {
+    pub value: bool,
 }
 
 impl Object for Boolean {
@@ -47,10 +54,14 @@ impl Object for Boolean {
     fn inspect(&self) -> String {
         format!("{}", self.value)
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
-struct Float {
-    value: f64,
+pub struct Float {
+    pub value: f64,
 }
 
 impl Object for Float {
@@ -61,9 +72,13 @@ impl Object for Float {
     fn inspect(&self) -> String {
         format!("{}", self.value)
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
-struct Null {}
+pub struct Null {}
 
 impl Object for Null {
     fn get_type(&self) -> ObjectType {
@@ -72,5 +87,9 @@ impl Object for Null {
 
     fn inspect(&self) -> String {
         "null".to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
