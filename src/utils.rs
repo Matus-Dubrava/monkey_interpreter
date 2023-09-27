@@ -33,13 +33,13 @@ pub fn print_parser_output(input: &str) {
 }
 
 pub fn print_parser_output_of_supported_operations() {
-    let functions = Vec::from([
+    let functions = vec![
         "fn () {}",
         "fn () { x }",
         "fn (x) {}",
         "fn (x, y) { x + 1 }",
         "let add = (x, y) { x + y }",
-    ]);
+    ];
 
     for function in functions {
         println!("INPUT: {}", function);
@@ -47,7 +47,7 @@ pub fn print_parser_output_of_supported_operations() {
         println!();
     }
 
-    let if_expressions = Vec::from(["if (x) {}", "if (true) { x + 1 } else {x - 1}"]);
+    let if_expressions = vec!["if (x) {}", "if (true) { x + 1 } else {x - 1}"];
 
     for expr in if_expressions {
         println!("INPUT: {}", expr);

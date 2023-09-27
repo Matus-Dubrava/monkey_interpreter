@@ -30,7 +30,7 @@ mod parser_tests {
 
         let mut lex = Lexer::new(&input.to_string());
 
-        let exp_tokens = Vec::from([
+        let exp_tokens = vec![
             Token::from_str(TokenType::LET, "let"),
             Token::from_str(TokenType::IDENT, "five"),
             Token::from_str(TokenType::ASSIGN, "="),
@@ -67,7 +67,7 @@ mod parser_tests {
             Token::from_str(TokenType::RPAREN, ")"),
             Token::from_str(TokenType::SEMICOLON, ";"),
             Token::from_str(TokenType::EOF, "\0"),
-        ]);
+        ];
 
         let tokens = lex.get_all_tokens();
 
@@ -83,7 +83,7 @@ mod parser_tests {
 
         let mut lex = Lexer::new(&input.to_string());
 
-        let exp_tokens = Vec::from([
+        let exp_tokens = vec![
             Token::from_str(TokenType::BANG, "!"),
             Token::from_str(TokenType::ASSIGN, "="),
             Token::from_str(TokenType::SLASH, "/"),
@@ -97,7 +97,7 @@ mod parser_tests {
             Token::from_str(TokenType::INT, "5"),
             Token::from_str(TokenType::SEMICOLON, ";"),
             Token::from_str(TokenType::EOF, "\0"),
-        ]);
+        ];
 
         let tokens = lex.get_all_tokens();
         assert_tokens_eq(&exp_tokens, &tokens);
@@ -115,7 +115,7 @@ mod parser_tests {
 
         let mut lex = Lexer::new(&input.to_string());
 
-        let exp_tokens = Vec::from([
+        let exp_tokens = vec![
             Token::from_str(TokenType::IF, "if"),
             Token::from_str(TokenType::LPAREN, "("),
             Token::from_str(TokenType::INT, "5"),
@@ -134,7 +134,7 @@ mod parser_tests {
             Token::from_str(TokenType::SEMICOLON, ";"),
             Token::from_str(TokenType::RBRACE, "}"),
             Token::from_str(TokenType::EOF, "\0"),
-        ]);
+        ];
 
         let tokens = lex.get_all_tokens();
         assert_tokens_eq(&exp_tokens, &tokens)
@@ -149,7 +149,7 @@ mod parser_tests {
 
         let mut lex = Lexer::new(&input.to_string());
 
-        let exp_tokens = Vec::from([
+        let exp_tokens = vec![
             Token::from_str(TokenType::INT, "1001"),
             Token::from_str(TokenType::EQ, "=="),
             Token::from_str(TokenType::INT, "1001"),
@@ -159,7 +159,7 @@ mod parser_tests {
             Token::from_str(TokenType::INT, "99"),
             Token::from_str(TokenType::SEMICOLON, ";"),
             Token::from_str(TokenType::EOF, "\0"),
-        ]);
+        ];
 
         let tokens = lex.get_all_tokens();
         assert_tokens_eq(&exp_tokens, &tokens);
@@ -175,7 +175,7 @@ mod parser_tests {
 
         let mut lex = Lexer::new(&input.to_string());
 
-        let exp_tokens = Vec::from([
+        let exp_tokens = vec![
             Token::from_str(TokenType::LET, "let"),
             Token::from_str(TokenType::IDENT, "some_x"),
             Token::from_str(TokenType::ASSIGN, "="),
@@ -188,7 +188,7 @@ mod parser_tests {
             Token::from_str(TokenType::ILLEGAL, "illegal"),
             Token::from_str(TokenType::SEMICOLON, ";"),
             Token::from_str(TokenType::EOF, "\0"),
-        ]);
+        ];
 
         let tokens = lex.get_all_tokens();
 

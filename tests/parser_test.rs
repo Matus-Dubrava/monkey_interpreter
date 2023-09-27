@@ -26,7 +26,7 @@ mod parsers_tests {
             }
         }
 
-        let test_cases = Vec::from([
+        let test_cases = vec![
             OperatorPrecedenenceTest::new("-a * b", "((-a) * b)"),
             OperatorPrecedenenceTest::new("!-a", "(!(-a))"),
             OperatorPrecedenenceTest::new("a + b + c", "((a + b) + c)"),
@@ -65,7 +65,7 @@ mod parsers_tests {
                 "add(a + b + c * d / f + g)",
                 "add((((a + b) + ((c * d) / f)) + g))",
             ),
-        ]);
+        ];
 
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.input.as_str());
@@ -294,10 +294,7 @@ mod parsers_tests {
 
         // Validate function's parameters.
         // There should be two identifiers: `x` and `y`.
-        let expected_params = Vec::from(["x", "y"])
-            .iter()
-            .map(|&s| s.to_string())
-            .collect();
+        let expected_params = vec!["x", "y"].iter().map(|&s| s.to_string()).collect();
         validate_function_parameters(&function.parameters, &expected_params);
 
         // Validate function's body. There should be one infix statement.
@@ -330,19 +327,13 @@ mod parsers_tests {
             }
         }
 
-        let test_cases = Vec::from([
-            TestCase::new("fn() { x };", Vec::new()),
-            TestCase::new("fn(x) { x };", Vec::from(["x"])),
-            TestCase::new("fn(x, y, z) { x };", Vec::from(["x", "y", "z"])),
-            TestCase::new(
-                "fn(my_var, another_var) {};",
-                Vec::from(["my_var", "another_var"]),
-            ),
-            TestCase::new(
-                "fn(MyVar, AnotherVar) {};",
-                Vec::from(["MyVar", "AnotherVar"]),
-            ),
-        ]);
+        let test_cases = vec![
+            TestCase::new("fn() { x };", vec![]),
+            TestCase::new("fn(x) { x };", vec!["x"]),
+            TestCase::new("fn(x, y, z) { x };", vec!["x", "y", "z"]),
+            TestCase::new("fn(my_var, another_var) {};", vec!["my_var", "another_var"]),
+            TestCase::new("fn(MyVar, AnotherVar) {};", vec!["MyVar", "AnotherVar"]),
+        ];
 
         for test_case in test_cases {
             let mut parser = Parser::from_str(&test_case.input);
@@ -396,7 +387,7 @@ mod parsers_tests {
         let function = get_and_assert_function_literal(&call_expr.function);
         validate_function_parameters(
             &function.parameters,
-            &Vec::from(["a".to_string(), "b".to_string()]),
+            &vec!["a".to_string(), "b".to_string()],
         );
 
         validate_argument_list_length(call_expr.arguments.len(), 2);
@@ -449,7 +440,7 @@ mod parsers_tests {
         let function = get_and_assert_function_literal(&call_expr_arg_2.function);
         validate_function_parameters(
             &function.parameters,
-            &Vec::from(["x".to_string(), "y".to_string()]),
+            &vec!["x".to_string(), "y".to_string()],
         );
         let left: Box<dyn Any> = Box::new("x");
         let right: Box<dyn Any> = Box::new("y");
@@ -545,7 +536,7 @@ mod parsers_tests {
         false;
         ";
 
-        let expected_values = Vec::from([true, false]);
+        let expected_values = vec![true, false];
         let mut parser = Parser::from_str(input);
         let program = parser.parse_program();
 
