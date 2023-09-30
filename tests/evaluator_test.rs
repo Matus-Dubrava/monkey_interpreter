@@ -21,6 +21,28 @@ mod evaluator_test {
 
         for test_case in test_cases {
             let evaluated = test_eval(test_case.0);
+            assert!(evaluated.is_some(), "Expected Boolean Object, got=`None`");
+            test_boolean_object(evaluated.unwrap(), test_case.1);
+        }
+    }
+
+    #[test]
+    fn should_evaluate_bang_operator() {
+        let test_cases = vec![
+            ("!true", false),
+            ("!false", true),
+            ("!5", false),
+            ("!!true", true),
+            ("!!false", false),
+            ("!!5", true),
+        ];
+
+        for test_case in test_cases {
+            let evaluated = test_eval(test_case.0);
+            assert!(
+                evaluated.is_some(),
+                "Expected expression to evaluate to value."
+            );
             test_boolean_object(evaluated.unwrap(), test_case.1);
         }
     }

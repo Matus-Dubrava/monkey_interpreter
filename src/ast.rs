@@ -116,7 +116,18 @@ impl Node for PrefixExpression {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        let right = self.right.eval().unwrap_or(Object::Null);
+        match self.operator.as_str() {
+            // Integers: evaluate to `true` unless it is `0`
+            "!" => match right {
+                Object::Boolean(val) if val == true => Some(Object::Boolean(false)),
+                Object::Boolean(val) if val == false => Some(Object::Boolean(true)),
+                Object::Integer(val) if val == 0 => Some(Object::Boolean(true)),
+                Object::Integer(_) => Some(Object::Boolean(false)),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 }
 
