@@ -119,11 +119,19 @@ impl Node for PrefixExpression {
         let right = self.right.eval().unwrap_or(Object::Null);
         match self.operator.as_str() {
             // Integers: evaluate to `true` unless it is `0`
+            // Floats: evalute to `true` unless it is 0.0
             "!" => match right {
                 Object::Boolean(val) if val == true => Some(Object::Boolean(false)),
                 Object::Boolean(val) if val == false => Some(Object::Boolean(true)),
                 Object::Integer(val) if val == 0 => Some(Object::Boolean(true)),
                 Object::Integer(_) => Some(Object::Boolean(false)),
+                Object::Float(val) if val == 0.0 => Some(Object::Boolean(true)),
+                Object::Float(_) => Some(Object::Boolean(false)),
+                _ => None,
+            },
+            "-" => match right {
+                Object::Integer(val) => Some(Object::Integer(-val)),
+                Object::Float(val) => Some(Object::Float(-val)),
                 _ => None,
             },
             _ => None,
@@ -274,7 +282,7 @@ impl Node for FloatLiteral {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        Some(Object::Float(self.value))
     }
 }
 
