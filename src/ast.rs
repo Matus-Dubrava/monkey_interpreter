@@ -598,7 +598,7 @@ impl Node for Boolean {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        Some(Object::Boolean(self.value))
     }
 }
 

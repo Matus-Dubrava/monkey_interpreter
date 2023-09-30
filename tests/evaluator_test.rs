@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod evaluator_test {
     use monkey_interpreter::ast::Node;
-    use monkey_interpreter::object::Object;
+    use monkey_interpreter::object::{Object, ObjectType};
     use monkey_interpreter::parser::Parser;
 
     #[test]
@@ -12,6 +12,16 @@ mod evaluator_test {
             let evaluated = test_eval(test_case.0);
             assert!(evaluated.is_some(), "Expected Integer Object, got=`None`");
             test_integer_object(evaluated.unwrap(), test_case.1);
+        }
+    }
+
+    #[test]
+    fn should_evalute_boolean_expression() {
+        let test_cases = vec![("true", true), ("false", false)];
+
+        for test_case in test_cases {
+            let evaluated = test_eval(test_case.0);
+            test_boolean_object(evaluated.unwrap(), test_case.1);
         }
     }
 
@@ -29,6 +39,17 @@ mod evaluator_test {
                 expected, val
             ),
             _ => panic!("Expected Integer, got=`{}`", obj.to_string()),
+        }
+    }
+
+    fn test_boolean_object(obj: Object, expected: bool) {
+        match obj {
+            Object::Boolean(val) => assert_eq!(
+                val, expected,
+                "Boolean value doesn't match. Expected=`{}`, got=`{}`",
+                expected, val
+            ),
+            _ => panic!("Expected Boolean, got=`{}`", obj.to_string()),
         }
     }
 }
