@@ -93,7 +93,8 @@ impl Node for InfixExpression {
             (Object::Float(l), "<", Object::Float(r)) => Some(Object::Boolean(l < r)),
             (Object::Integer(l), ">", Object::Integer(r)) => Some(Object::Boolean(l > r)),
             (Object::Float(l), ">", Object::Float(r)) => Some(Object::Boolean(l > r)),
-
+            (Object::Boolean(l), "==", Object::Boolean(r)) => Some(Object::Boolean(l == r)),
+            (Object::Boolean(l), "!=", Object::Boolean(r)) => Some(Object::Boolean(l != r)),
             _ => None,
         }
     }
