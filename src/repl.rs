@@ -1,7 +1,6 @@
 use std::io::Write;
 
-use crate::ast::Node;
-use crate::parser::Parser;
+use crate::{ast::Node, parser::Parser};
 
 pub fn start_repl() {
     let mut input = String::new();
@@ -28,7 +27,13 @@ pub fn start_repl() {
                     continue;
                 }
 
-                println!("{}", program.to_string());
+                match program.eval() {
+                    Some(obj) => println!("{}", obj.to_string()),
+                    None => println!(
+                        "error: failed to evaluate given input {}",
+                        program.to_string()
+                    ),
+                }
             }
             Err(err) => println!("error: {err}"),
         }

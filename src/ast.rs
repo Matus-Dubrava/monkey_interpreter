@@ -6,7 +6,7 @@ use std::any::Any;
 pub trait Node {
     fn token_literal(&self) -> &str;
     fn to_string(&self) -> String;
-    fn eval(&self) -> Object;
+    fn eval(&self) -> Option<Object>;
 }
 
 pub trait Statement: Node {
@@ -38,7 +38,7 @@ impl Node for DummyExpression {
         "(dummy expression)".to_string()
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -72,7 +72,7 @@ impl Node for InfixExpression {
         )
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -115,7 +115,7 @@ impl Node for PrefixExpression {
         format!("({}{})", self.operator, self.right.to_string()).to_string()
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -152,7 +152,7 @@ impl Node for ExpressionStatement {
         self.expression.to_string()
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         self.expression.eval()
     }
 }
@@ -184,8 +184,8 @@ impl Node for Program {
             .to_string()
     }
 
-    fn eval(&self) -> Object {
-        let mut res: Object = Object::Null;
+    fn eval(&self) -> Option<Object> {
+        let mut res: Option<Object> = None;
 
         for stmt in &self.statements {
             res = stmt.eval();
@@ -229,8 +229,8 @@ impl Node for IntegerLiteral {
         self.token.literal.clone()
     }
 
-    fn eval(&self) -> Object {
-        Object::Integer(self.value)
+    fn eval(&self) -> Option<Object> {
+        Some(Object::Integer(self.value))
     }
 }
 
@@ -262,7 +262,7 @@ impl Node for FloatLiteral {
         self.token.literal.as_str()
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -296,7 +296,7 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -335,7 +335,7 @@ impl Node for LetStatement {
         )
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -371,7 +371,7 @@ impl Node for ReturnStatement {
         )
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -412,7 +412,7 @@ impl Node for BlockStatement {
         )
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -455,7 +455,7 @@ impl Node for IfExpression {
         return s;
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -507,7 +507,7 @@ impl Node for FunctionLiteral {
         )
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -555,7 +555,7 @@ impl Node for CallExpression {
         )
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -597,7 +597,7 @@ impl Node for Boolean {
         &self.token.literal
     }
 
-    fn eval(&self) -> Object {
+    fn eval(&self) -> Option<Object> {
         unimplemented!()
     }
 }

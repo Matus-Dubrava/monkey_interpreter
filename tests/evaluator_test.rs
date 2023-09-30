@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod evaluator_test {
     use monkey_interpreter::ast::Node;
-    use monkey_interpreter::evaluator::eval;
     use monkey_interpreter::object::Object;
     use monkey_interpreter::parser::Parser;
 
@@ -11,15 +10,15 @@ mod evaluator_test {
 
         for test_case in test_cases {
             let evaluated = test_eval(test_case.0);
-            test_integer_object(evaluated, test_case.1);
+            assert!(evaluated.is_some(), "Expected Integer Object, got=`None`");
+            test_integer_object(evaluated.unwrap(), test_case.1);
         }
     }
 
-    fn test_eval(input: &str) -> Object {
+    fn test_eval(input: &str) -> Option<Object> {
         let mut parser = Parser::from_str(input);
         let program: Box<dyn Node> = Box::new(parser.parse_program());
-
-        return eval(program);
+        return program.eval();
     }
 
     fn test_integer_object(obj: Object, expected: i64) {
