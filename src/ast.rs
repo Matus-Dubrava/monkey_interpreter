@@ -1,9 +1,12 @@
+use crate::object::Object;
 use crate::token::Token;
+
 use std::any::Any;
 
 pub trait Node {
     fn token_literal(&self) -> &str;
     fn to_string(&self) -> String;
+    fn eval(&self) -> Object;
 }
 
 pub trait Statement: Node {
@@ -34,6 +37,10 @@ impl Node for DummyExpression {
     fn to_string(&self) -> String {
         "(dummy expression)".to_string()
     }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
+    }
 }
 
 pub struct InfixExpression {
@@ -63,6 +70,10 @@ impl Node for InfixExpression {
             self.operator,
             self.right.to_string()
         )
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 
@@ -103,6 +114,10 @@ impl Node for PrefixExpression {
     fn to_string(&self) -> String {
         format!("({}{})", self.operator, self.right.to_string()).to_string()
     }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
+    }
 }
 
 impl PrefixExpression {
@@ -136,6 +151,10 @@ impl Node for ExpressionStatement {
     fn to_string(&self) -> String {
         self.expression.to_string()
     }
+
+    fn eval(&self) -> Object {
+        self.expression.eval()
+    }
 }
 
 impl ExpressionStatement {
@@ -163,6 +182,16 @@ impl Node for Program {
             .collect::<String>()
             .trim_end()
             .to_string()
+    }
+
+    fn eval(&self) -> Object {
+        let mut res: Object = Object::Null;
+
+        for stmt in &self.statements {
+            res = stmt.eval();
+        }
+
+        return res;
     }
 }
 
@@ -199,6 +228,10 @@ impl Node for IntegerLiteral {
     fn to_string(&self) -> String {
         self.token.literal.clone()
     }
+
+    fn eval(&self) -> Object {
+        Object::Integer(self.value)
+    }
 }
 
 impl IntegerLiteral {
@@ -227,6 +260,10 @@ impl Node for FloatLiteral {
 
     fn token_literal(&self) -> &str {
         self.token.literal.as_str()
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 
@@ -257,6 +294,10 @@ impl Node for Identifier {
 
     fn to_string(&self) -> String {
         self.value.to_string()
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 
@@ -293,6 +334,10 @@ impl Node for LetStatement {
             &self.value.to_string()
         )
     }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
+    }
 }
 
 impl LetStatement {
@@ -324,6 +369,10 @@ impl Node for ReturnStatement {
             self.token_literal(),
             &self.return_value.to_string()
         )
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 
@@ -361,6 +410,10 @@ impl Node for BlockStatement {
                 .collect::<String>()
                 .to_string()
         )
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 
@@ -400,6 +453,10 @@ impl Node for IfExpression {
         }
 
         return s;
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 
@@ -449,6 +506,10 @@ impl Node for FunctionLiteral {
             self.body.to_string()
         )
     }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
+    }
 }
 
 impl FunctionLiteral {
@@ -493,6 +554,10 @@ impl Node for CallExpression {
                 .trim_end_matches(", ")
         )
     }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
+    }
 }
 
 impl CallExpression {
@@ -530,6 +595,10 @@ impl Node for Boolean {
 
     fn token_literal(&self) -> &str {
         &self.token.literal
+    }
+
+    fn eval(&self) -> Object {
+        unimplemented!()
     }
 }
 

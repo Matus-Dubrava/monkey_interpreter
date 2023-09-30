@@ -1,10 +1,10 @@
 use std::any::Any;
 
 pub enum ObjectType {
-    INTEGER_OBJ,
-    BOOLEAN_OBJ,
-    FLOAT_OBJ,
-    NULL_OBJ,
+    IntegerObj,
+    BooleanObj,
+    FloatObj,
+    NullOb,
 }
 
 pub enum Object {
@@ -17,10 +17,10 @@ pub enum Object {
 impl ToString for ObjectType {
     fn to_string(&self) -> String {
         match self {
-            Self::INTEGER_OBJ => "INTEGER".to_string(),
-            Self::BOOLEAN_OBJ => "BOOLEAN".to_string(),
-            Self::FLOAT_OBJ => "FLOAT".to_string(),
-            Self::NULL_OBJ => "NULL".to_string(),
+            Self::IntegerObj => "INTEGER".to_string(),
+            Self::BooleanObj => "BOOLEAN".to_string(),
+            Self::FloatObj => "FLOAT".to_string(),
+            Self::NullOb => "NULL".to_string(),
         }
     }
 }
