@@ -73,7 +73,29 @@ impl Node for InfixExpression {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        let left = self.left.eval().unwrap_or(Object::Null);
+        let right = self.right.eval().unwrap_or(Object::Null);
+
+        match (left, self.operator.as_str(), right) {
+            (Object::Integer(l), "+", Object::Integer(r)) => Some(Object::Integer(l + r)),
+            (Object::Float(l), "+", Object::Float(r)) => Some(Object::Float(l + r)),
+            (Object::Integer(l), "-", Object::Integer(r)) => Some(Object::Integer(l - r)),
+            (Object::Float(l), "-", Object::Float(r)) => Some(Object::Float(l - r)),
+            (Object::Integer(l), "*", Object::Integer(r)) => Some(Object::Integer(l * r)),
+            (Object::Float(l), "*", Object::Float(r)) => Some(Object::Float(l * r)),
+            (Object::Integer(l), "/", Object::Integer(r)) => Some(Object::Integer(l / r)),
+            (Object::Float(l), "/", Object::Float(r)) => Some(Object::Float(l / r)),
+            (Object::Integer(l), "==", Object::Integer(r)) => Some(Object::Boolean(l == r)),
+            (Object::Float(l), "==", Object::Float(r)) => Some(Object::Boolean(l == r)),
+            (Object::Integer(l), "!=", Object::Integer(r)) => Some(Object::Boolean(l != r)),
+            (Object::Float(l), "!=", Object::Float(r)) => Some(Object::Boolean(l != r)),
+            (Object::Integer(l), "<", Object::Integer(r)) => Some(Object::Boolean(l < r)),
+            (Object::Float(l), "<", Object::Float(r)) => Some(Object::Boolean(l < r)),
+            (Object::Integer(l), ">", Object::Integer(r)) => Some(Object::Boolean(l > r)),
+            (Object::Float(l), ">", Object::Float(r)) => Some(Object::Boolean(l > r)),
+
+            _ => None,
+        }
     }
 }
 
@@ -131,6 +153,7 @@ impl Node for PrefixExpression {
             },
             "-" => match right {
                 Object::Integer(val) => Some(Object::Integer(-val)),
+                Object::Float(val) if val == 0.0 => Some(Object::Float(val)),
                 Object::Float(val) => Some(Object::Float(-val)),
                 _ => None,
             },
