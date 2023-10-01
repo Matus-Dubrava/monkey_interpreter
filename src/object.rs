@@ -3,6 +3,7 @@ pub enum Object {
     Boolean(bool),
     Float(f64),
     Null,
+    ReturnValue(Box<Object>),
 }
 
 impl ToString for Object {
@@ -12,6 +13,7 @@ impl ToString for Object {
             Object::Boolean(val) => format!("{}", val),
             Object::Float(val) => format!("{}", val),
             Object::Null => "null".into(),
+            Object::ReturnValue(val) => format!("{}", val.to_string()),
         }
     }
 }

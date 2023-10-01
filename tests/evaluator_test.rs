@@ -5,6 +5,36 @@ mod evaluator_test {
     use monkey_interpreter::parser::Parser;
 
     #[test]
+    fn should_evaluate_if_expression() {
+        let test_cases = vec![
+            ("if (true) { 10 }", Some(10)),
+            ("if (false) { 10 }", None),
+            ("if (1) { 10 }", Some(10)),
+            ("if (1 < 2) { 10 }", Some(10)),
+            ("if (1 > 2) { 10 }", None),
+            ("if (1 > 2) { 10 } else { 20 }", Some(20)),
+            ("if (1 < 2) { 10 } else { 20 }", Some(10)),
+        ];
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(test_case.0);
+            let program = parser.parse_program();
+            let evaluated = program.eval();
+
+            assert!(
+                evaluated.is_some(),
+                "Expected If expression `{}`, got=`None`",
+                test_case.0,
+            );
+
+            match test_case.1 {
+                None => test_null_object(evaluated.unwrap()),
+                Some(val) => test_integer_object(evaluated.unwrap(), val),
+            }
+        }
+    }
+
+    #[test]
     fn should_evaluate_integer_expression() {
         let test_cases = vec![
             ("5", 5),
@@ -192,6 +222,13 @@ mod evaluator_test {
                 expected, val
             ),
             _ => panic!("Expected Boolean, got=`{}`", obj.to_string()),
+        }
+    }
+
+    fn test_null_object(obj: Object) {
+        match obj {
+            Object::Null => (),
+            _ => panic!("Expected Null, got=`{}`", obj.to_string()),
         }
     }
 }

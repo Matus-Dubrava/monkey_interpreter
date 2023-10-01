@@ -1,3 +1,4 @@
+use crate::eval::is_truthy;
 use crate::object::Object;
 use crate::token::Token;
 
@@ -456,7 +457,13 @@ impl Node for BlockStatement {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        let mut res: Option<Object> = None;
+
+        for stmt in &self.statements {
+            res = stmt.eval();
+        }
+
+        return res;
     }
 }
 
@@ -499,7 +506,20 @@ impl Node for IfExpression {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        let condition = self.condition.eval();
+
+        match condition {
+            None => None,
+            Some(value) => {
+                if is_truthy(value) {
+                    return self.consequence.eval();
+                } else if self.alternative.is_some() {
+                    return self.alternative.as_ref().unwrap().eval();
+                } else {
+                    return Some(Object::Null);
+                }
+            }
+        }
     }
 }
 
