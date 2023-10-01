@@ -5,6 +5,56 @@ mod evaluator_test {
     use monkey_interpreter::parser::Parser;
 
     #[test]
+    fn should_be_able_to_handle_errors() {
+        let test_cases = vec![
+            ("5 + true;", "type mismatch: INTEGER + BOOLEAN"),
+            ("5 + true; 5;", "type mismatch: INTEGER + BOOLEAN"),
+            ("-true", "unknown operator: -BOOLEAN"),
+            ("true + false;", "unknown operator: BOOLEAN + BOOLEAN"),
+            ("5; true + false; 5", "unknown operator: BOOLEAN + BOOLEAN"),
+            (
+                "if (10 > 1) { true + false; }",
+                "unknown operator: BOOLEAN + BOOLEAN",
+            ),
+            (
+                "
+                if (10 > 1) {
+                    if (10 > 1) {
+                        return true + false;
+                    }
+                    return 1;
+                }
+            ",
+                "unknown operator: BOOLEAN + BOOLEAN",
+            ),
+            (
+                "
+                if (10 > 1) {
+                    if (10 > 1) {
+                        true + false;
+                    }
+                    return 1;
+                }
+            ",
+                "unknown operator: BOOLEAN + BOOLEAN",
+            ),
+        ];
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(test_case.0);
+            let program = parser.parse_program();
+            let evaluated = program.eval();
+
+            assert!(
+                evaluated.is_some(),
+                "Expected program to evaluate to a value, got=`None`"
+            );
+
+            test_error(evaluated.unwrap(), test_case.1);
+        }
+    }
+
+    #[test]
     fn should_evaluate_return_statement() {
         let test_cases = vec![
             ("return 10;", 10),
@@ -217,6 +267,17 @@ mod evaluator_test {
                 test_case.0
             );
             test_boolean_object(evaluated.unwrap(), test_case.1);
+        }
+    }
+
+    fn test_error(obj: Object, expected_msg: &str) {
+        match obj {
+            Object::Error(msg) if msg == expected_msg => (),
+            Object::Error(msg) => panic!(
+                "Expected Error message to be=`{}`, got=`{}`",
+                expected_msg, msg
+            ),
+            _ => panic!("Expected Error object, got=`{}`", obj.to_string()),
         }
     }
 

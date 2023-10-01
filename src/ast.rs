@@ -77,7 +77,17 @@ impl Node for InfixExpression {
         let left = self.left.eval().unwrap_or(Object::Null);
         let right = self.right.eval().unwrap_or(Object::Null);
 
-        match (left, self.operator.as_str(), right) {
+        match left {
+            Object::Error(_) => return Some(left),
+            _ => (),
+        }
+
+        match right {
+            Object::Error(_) => return Some(right),
+            _ => (),
+        }
+
+        match (&left, self.operator.as_str(), &right) {
             (Object::Integer(l), "+", Object::Integer(r)) => Some(Object::Integer(l + r)),
             (Object::Float(l), "+", Object::Float(r)) => Some(Object::Float(l + r)),
             (Object::Integer(l), "-", Object::Integer(r)) => Some(Object::Integer(l - r)),
@@ -96,7 +106,23 @@ impl Node for InfixExpression {
             (Object::Float(l), ">", Object::Float(r)) => Some(Object::Boolean(l > r)),
             (Object::Boolean(l), "==", Object::Boolean(r)) => Some(Object::Boolean(l == r)),
             (Object::Boolean(l), "!=", Object::Boolean(r)) => Some(Object::Boolean(l != r)),
-            _ => None,
+            _ => {
+                if left.get_type() != right.get_type() {
+                    return Some(Object::Error(format!(
+                        "type mismatch: {} {} {}",
+                        left.get_type(),
+                        self.operator,
+                        right.get_type()
+                    )));
+                } else {
+                    return Some(Object::Error(format!(
+                        "unknown operator: {} {} {}",
+                        left.get_type(),
+                        self.operator,
+                        right.get_type()
+                    )));
+                }
+            }
         }
     }
 }
@@ -141,6 +167,12 @@ impl Node for PrefixExpression {
 
     fn eval(&self) -> Option<Object> {
         let right = self.right.eval().unwrap_or(Object::Null);
+
+        match right {
+            Object::Error(_) => return Some(right),
+            _ => (),
+        }
+
         match self.operator.as_str() {
             // Integers: evaluate to `true` unless it is `0`
             // Floats: evalute to `true` unless it is 0.0
@@ -157,9 +189,17 @@ impl Node for PrefixExpression {
                 Object::Integer(val) => Some(Object::Integer(-val)),
                 Object::Float(val) if val == 0.0 => Some(Object::Float(val)),
                 Object::Float(val) => Some(Object::Float(-val)),
-                _ => None,
+                _ => Some(Object::Error(format!(
+                    "unknown operator: {}{}",
+                    self.operator,
+                    right.get_type()
+                ))),
             },
-            _ => None,
+            _ => Some(Object::Error(format!(
+                "unknown operator: {}{}",
+                self.operator,
+                right.get_type()
+            ))),
         }
     }
 }
@@ -244,6 +284,10 @@ impl Node for Program {
                     // block. Check BlockStatement's `eval` to
                     // see the difference.
                     Object::ReturnValue(val) => return Some(val.as_ref().clone()),
+                    // Stop execution when we encouter Error object.
+                    // BlockStatement's eval propagates error to the
+                    // this scope.
+                    Object::Error(_) => return Some(obj.clone()),
                     _ => continue,
                 },
             }
@@ -430,9 +474,11 @@ impl Node for ReturnStatement {
     }
 
     fn eval(&self) -> Option<Object> {
-        let val = self.return_value.eval();
-        match val {
+        let obj = self.return_value.eval();
+
+        match obj {
             None => None,
+            Some(Object::Error(_)) => return obj,
             Some(obj) => Some(Object::ReturnValue(Box::new(obj))),
         }
     }
@@ -499,6 +545,10 @@ impl Node for BlockStatement {
                     Object::ReturnValue(_) => {
                         return Some(obj.clone());
                     }
+                    // Same for Error object. When we encouter error, let's
+                    // propagate it to the outer scope so that Program's eval
+                    // can stop the execution.
+                    Object::Error(_) => return Some(obj.clone()),
                     _ => continue,
                 },
             }
@@ -551,6 +601,7 @@ impl Node for IfExpression {
 
         match condition {
             None => None,
+            Some(Object::Error(_)) => condition,
             Some(value) => {
                 if is_truthy(value) {
                     return self.consequence.eval();
