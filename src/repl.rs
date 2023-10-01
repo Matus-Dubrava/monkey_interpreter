@@ -27,7 +27,7 @@ pub fn start_repl() {
                     continue;
                 }
 
-                match program.eval() {
+                match program.eval(&program.environment) {
                     Some(obj) => println!("{}", obj.to_string()),
                     None => println!(
                         "error: failed to evaluate given input {}",

@@ -1,8 +1,32 @@
 #[cfg(test)]
 mod evaluator_test {
     use monkey_interpreter::ast::Node;
+    use monkey_interpreter::environment;
     use monkey_interpreter::object::Object;
     use monkey_interpreter::parser::Parser;
+
+    #[test]
+    fn should_be_able_evaluate_let_statement() {
+        let test_cases = vec![
+            ("let a = 5; a;", 5),
+            ("let a = 5 * 5; a;", 25),
+            ("let a = 5; let b = a; b;", 5),
+            ("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+        ];
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(test_case.0);
+            let program = parser.parse_program();
+            let evaluated = program.eval(&program.environment);
+
+            assert!(
+                evaluated.is_some(),
+                "Expected program to evaluater to a value, got=`None`"
+            );
+
+            test_integer_object(evaluated.unwrap(), test_case.1);
+        }
+    }
 
     #[test]
     fn should_be_able_to_handle_errors() {
@@ -38,12 +62,13 @@ mod evaluator_test {
             ",
                 "unknown operator: BOOLEAN + BOOLEAN",
             ),
+            ("foobar", "identifier not found: foobar"),
         ];
 
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval();
+            let evaluated = program.eval(&program.environment);
 
             assert!(
                 evaluated.is_some(),
@@ -76,7 +101,7 @@ mod evaluator_test {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval();
+            let evaluated = program.eval(&program.environment);
 
             assert!(
                 evaluated.is_some(),
@@ -103,7 +128,7 @@ mod evaluator_test {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval();
+            let evaluated = program.eval(&program.environment);
 
             assert!(
                 evaluated.is_some(),
@@ -283,8 +308,10 @@ mod evaluator_test {
 
     fn test_eval(input: &str) -> Option<Object> {
         let mut parser = Parser::from_str(input);
-        let program: Box<dyn Node> = Box::new(parser.parse_program());
-        return program.eval();
+        let program = parser.parse_program();
+        let environment = program.environment.clone();
+        let program_node: Box<dyn Node> = Box::new(program);
+        return program_node.eval(&environment);
     }
 
     fn test_integer_object(obj: Object, expected: i64) {

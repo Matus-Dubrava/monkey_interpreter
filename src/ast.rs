@@ -1,3 +1,4 @@
+use crate::environment::Environment;
 use crate::eval::is_truthy;
 use crate::object::Object;
 use crate::token::Token;
@@ -7,7 +8,7 @@ use std::any::Any;
 pub trait Node {
     fn token_literal(&self) -> &str;
     fn to_string(&self) -> String;
-    fn eval(&self) -> Option<Object>;
+    fn eval(&self, environment: &Environment) -> Option<Object>;
 }
 
 pub trait Statement: Node {
@@ -39,7 +40,7 @@ impl Node for DummyExpression {
         "(dummy expression)".to_string()
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -73,9 +74,9 @@ impl Node for InfixExpression {
         )
     }
 
-    fn eval(&self) -> Option<Object> {
-        let left = self.left.eval().unwrap_or(Object::Null);
-        let right = self.right.eval().unwrap_or(Object::Null);
+    fn eval(&self, environment: &Environment) -> Option<Object> {
+        let left = self.left.eval(environment).unwrap_or(Object::Null);
+        let right = self.right.eval(environment).unwrap_or(Object::Null);
 
         match left {
             Object::Error(_) => return Some(left),
@@ -165,8 +166,8 @@ impl Node for PrefixExpression {
         format!("({}{})", self.operator, self.right.to_string()).to_string()
     }
 
-    fn eval(&self) -> Option<Object> {
-        let right = self.right.eval().unwrap_or(Object::Null);
+    fn eval(&self, environment: &Environment) -> Option<Object> {
+        let right = self.right.eval(environment).unwrap_or(Object::Null);
 
         match right {
             Object::Error(_) => return Some(right),
@@ -236,8 +237,8 @@ impl Node for ExpressionStatement {
         self.expression.to_string()
     }
 
-    fn eval(&self) -> Option<Object> {
-        self.expression.eval()
+    fn eval(&self, environment: &Environment) -> Option<Object> {
+        self.expression.eval(environment)
     }
 }
 
@@ -249,6 +250,7 @@ impl ExpressionStatement {
 
 pub struct Program {
     pub statements: Vec<Box<dyn Statement>>,
+    pub environment: Environment,
 }
 
 impl Node for Program {
@@ -268,11 +270,11 @@ impl Node for Program {
             .to_string()
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         let mut res: Option<Object> = None;
 
         for stmt in &self.statements {
-            res = stmt.eval();
+            res = stmt.eval(environment);
 
             match &res {
                 None => return None,
@@ -300,11 +302,19 @@ impl Node for Program {
 impl Program {
     pub fn new() -> Self {
         let statements: Vec<Box<dyn Statement>> = Vec::new();
-        Program { statements }
+        let mut environment = Environment::new();
+        Program {
+            statements,
+            environment,
+        }
     }
 
     pub fn from_statements(statements: Vec<Box<dyn Statement>>) -> Self {
-        Program { statements }
+        let mut environment = Environment::new();
+        Program {
+            statements,
+            environment,
+        }
     }
 }
 
@@ -331,7 +341,7 @@ impl Node for IntegerLiteral {
         self.token.literal.clone()
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         Some(Object::Integer(self.value))
     }
 }
@@ -364,7 +374,7 @@ impl Node for FloatLiteral {
         self.token.literal.as_str()
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         Some(Object::Float(self.value))
     }
 }
@@ -398,7 +408,7 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -437,7 +447,14 @@ impl Node for LetStatement {
         )
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
+        let obj = self.value.eval(environment);
+
+        match obj {
+            Some(Object::Error(_)) => return obj,
+            _ => (),
+        }
+
         unimplemented!()
     }
 }
@@ -473,8 +490,8 @@ impl Node for ReturnStatement {
         )
     }
 
-    fn eval(&self) -> Option<Object> {
-        let obj = self.return_value.eval();
+    fn eval(&self, environment: &Environment) -> Option<Object> {
+        let obj = self.return_value.eval(environment);
 
         match obj {
             None => None,
@@ -520,12 +537,12 @@ impl Node for BlockStatement {
         )
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         let mut res: Option<Object> = None;
 
         for stmt in &self.statements {
             dbg!(&stmt.to_string());
-            res = stmt.eval();
+            res = stmt.eval(environment);
             dbg!(&res);
 
             match &res {
@@ -596,17 +613,17 @@ impl Node for IfExpression {
         return s;
     }
 
-    fn eval(&self) -> Option<Object> {
-        let condition = self.condition.eval();
+    fn eval(&self, environment: &Environment) -> Option<Object> {
+        let condition = self.condition.eval(environment);
 
         match condition {
             None => None,
             Some(Object::Error(_)) => condition,
             Some(value) => {
                 if is_truthy(value) {
-                    return self.consequence.eval();
+                    return self.consequence.eval(environment);
                 } else if self.alternative.is_some() {
-                    return self.alternative.as_ref().unwrap().eval();
+                    return self.alternative.as_ref().unwrap().eval(environment);
                 } else {
                     return Some(Object::Null);
                 }
@@ -662,7 +679,7 @@ impl Node for FunctionLiteral {
         )
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -710,7 +727,7 @@ impl Node for CallExpression {
         )
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         unimplemented!()
     }
 }
@@ -752,7 +769,7 @@ impl Node for Boolean {
         &self.token.literal
     }
 
-    fn eval(&self) -> Option<Object> {
+    fn eval(&self, environment: &Environment) -> Option<Object> {
         Some(Object::Boolean(self.value))
     }
 }
