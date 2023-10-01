@@ -5,6 +5,40 @@ mod evaluator_test {
     use monkey_interpreter::parser::Parser;
 
     #[test]
+    fn should_evaluate_return_statement() {
+        let test_cases = vec![
+            ("return 10;", 10),
+            ("return 10; 9;", 10),
+            ("return 2 * 5; 9;", 10),
+            ("9; return 2 * 5; 9;", 10),
+            (
+                "
+                if (10 > 1) {
+                    if (10 > 1) {
+                        return 10;
+                    }
+                    return 1;
+                }",
+                10,
+            ),
+        ];
+
+        for test_case in test_cases {
+            let mut parser = Parser::from_str(test_case.0);
+            let program = parser.parse_program();
+            let evaluated = program.eval();
+
+            assert!(
+                evaluated.is_some(),
+                "Expected block statement `{}` to be evaluated to value, got=`None`",
+                test_case.0
+            );
+
+            test_integer_object(evaluated.unwrap(), test_case.1);
+        }
+    }
+
+    #[test]
     fn should_evaluate_if_expression() {
         let test_cases = vec![
             ("if (true) { 10 }", Some(10)),
@@ -23,7 +57,7 @@ mod evaluator_test {
 
             assert!(
                 evaluated.is_some(),
-                "Expected If expression `{}`, got=`None`",
+                "Expected If expression `{}` to be evaluated to a value, got=`None`",
                 test_case.0,
             );
 

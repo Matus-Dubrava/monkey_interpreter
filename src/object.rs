@@ -1,3 +1,4 @@
+#[derive(Clone, Debug)]
 pub enum Object {
     Integer(i64),
     Boolean(bool),

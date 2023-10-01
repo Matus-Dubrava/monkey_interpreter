@@ -233,6 +233,20 @@ impl Node for Program {
 
         for stmt in &self.statements {
             res = stmt.eval();
+
+            match &res {
+                None => return None,
+                Some(obj) => match obj {
+                    // Unwrap the return value end exit execution
+                    // of Program. We are handling this differently
+                    // when executing BlockStatement where we
+                    // need to let the value bulle up to the outermost
+                    // block. Check BlockStatement's `eval` to
+                    // see the difference.
+                    Object::ReturnValue(val) => return Some(val.as_ref().clone()),
+                    _ => continue,
+                },
+            }
         }
 
         return res;
@@ -416,7 +430,11 @@ impl Node for ReturnStatement {
     }
 
     fn eval(&self) -> Option<Object> {
-        unimplemented!()
+        let val = self.return_value.eval();
+        match val {
+            None => None,
+            Some(obj) => Some(Object::ReturnValue(Box::new(obj))),
+        }
     }
 }
 
@@ -460,7 +478,30 @@ impl Node for BlockStatement {
         let mut res: Option<Object> = None;
 
         for stmt in &self.statements {
+            dbg!(&stmt.to_string());
             res = stmt.eval();
+            dbg!(&res);
+
+            match &res {
+                None => return None,
+                Some(obj) => match obj {
+                    // We are returning the original ReturnValue
+                    // instead of unwrapping because if we unwrap it
+                    // in a nested block, it won't serve the purpose
+                    // of stopping execution in the outer scope.
+                    // Once ReturnValue is reached, we need to
+                    // stop execution, therefore we need to let
+                    // this ReturnValue bubble up to the outermost
+                    // block, where it is going to be picked up
+                    // Program's eval which unwraps it. Check
+                    // the Program's implementation of `eval` to
+                    // see the difference.
+                    Object::ReturnValue(_) => {
+                        return Some(obj.clone());
+                    }
+                    _ => continue,
+                },
+            }
         }
 
         return res;
