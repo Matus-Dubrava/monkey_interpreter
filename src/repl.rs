@@ -4,6 +4,7 @@ use crate::{ast::Node, environment::Environment, parser::Parser};
 
 pub fn start_repl() {
     let mut input = String::new();
+    let mut environment = Environment::new();
 
     loop {
         // It is essential to clear the input buffer here, otherwise the
@@ -17,8 +18,7 @@ pub fn start_repl() {
             Ok(0) => break,
             Ok(_) => {
                 let mut parser = Parser::from_str(&input);
-                let mut program = parser.parse_program();
-                let mut environment = Environment::new();
+                let program = parser.parse_program();
 
                 // Check for parsing errors, print them if there are any.
                 if parser.get_errors().len() != 0 {

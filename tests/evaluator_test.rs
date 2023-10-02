@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod evaluator_test {
     use monkey_interpreter::ast::Node;
-    use monkey_interpreter::environment::{self, Environment};
+    use monkey_interpreter::environment::Environment;
     use monkey_interpreter::object::Object;
     use monkey_interpreter::parser::Parser;
 

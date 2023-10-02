@@ -8,17 +8,23 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn get(&self, name: &str) -> Option<Object> {
-        self.get(name)
+    pub fn get(&self, name: &str) -> Option<&Object> {
+        self.store.get(name)
     }
 
-    pub fn set(&mut self, name: &str, obj: Object) -> Object {
-        self.set(name, obj)
+    pub fn set(&mut self, name: &str, obj: Object) -> Option<Object> {
+        self.store.insert(name.to_string(), obj)
     }
 
     pub fn new() -> Environment {
         Environment {
             store: HashMap::new(),
+        }
+    }
+
+    pub fn show(&self) {
+        for (key, value) in &self.store {
+            println!("{} = {}", key, value.to_string());
         }
     }
 }

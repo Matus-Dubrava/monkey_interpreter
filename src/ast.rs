@@ -305,7 +305,6 @@ impl Program {
     }
 
     pub fn from_statements(statements: Vec<Box<dyn Statement>>) -> Self {
-        let mut environment = Environment::new();
         Program { statements }
     }
 }
@@ -401,7 +400,17 @@ impl Node for Identifier {
     }
 
     fn eval(&self, environment: &mut Environment) -> Option<Object> {
-        unimplemented!()
+        let val = environment.get(&self.value);
+
+        match &val {
+            None => {
+                return Some(Object::Error(format!(
+                    "identifier not found: {}",
+                    self.value
+                )))
+            }
+            Some(_) => return val.cloned(),
+        }
     }
 }
 
@@ -444,10 +453,15 @@ impl Node for LetStatement {
 
         match obj {
             Some(Object::Error(_)) => return obj,
+            None => return None,
             _ => (),
         }
 
-        unimplemented!()
+        // Associate value returned from the expression with the
+        // identifier.
+        environment.set(&self.name.value, obj.as_ref().unwrap().clone());
+
+        return obj;
     }
 }
 
