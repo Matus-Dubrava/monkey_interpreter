@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::str::FromStr;
 
 use crate::ast::{
-    BlockStatement, Boolean, CallExpression, DummyExpression, Expression, ExpressionStatement,
-    FloatLiteral, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral,
-    LetStatement, Node, PrefixExpression, Program, ReturnStatement, Statement,
+    BlockStatement, Boolean, CallExpression, Expression, ExpressionStatement, FloatLiteral,
+    FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, Node,
+    PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};

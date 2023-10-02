@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::{ast::Node, parser::Parser};
+use crate::{ast::Node, environment::Environment, parser::Parser};
 
 pub fn start_repl() {
     let mut input = String::new();
@@ -17,7 +17,8 @@ pub fn start_repl() {
             Ok(0) => break,
             Ok(_) => {
                 let mut parser = Parser::from_str(&input);
-                let program = parser.parse_program();
+                let mut program = parser.parse_program();
+                let mut environment = Environment::new();
 
                 // Check for parsing errors, print them if there are any.
                 if parser.get_errors().len() != 0 {
@@ -27,7 +28,7 @@ pub fn start_repl() {
                     continue;
                 }
 
-                match program.eval(&program.environment) {
+                match program.eval(&mut environment) {
                     Some(obj) => println!("{}", obj.to_string()),
                     None => println!(
                         "error: failed to evaluate given input {}",

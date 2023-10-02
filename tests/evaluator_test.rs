@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod evaluator_test {
     use monkey_interpreter::ast::Node;
-    use monkey_interpreter::environment;
+    use monkey_interpreter::environment::{self, Environment};
     use monkey_interpreter::object::Object;
     use monkey_interpreter::parser::Parser;
 
@@ -17,7 +17,8 @@ mod evaluator_test {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval(&program.environment);
+            let mut environment = Environment::new();
+            let evaluated = program.eval(&mut environment);
 
             assert!(
                 evaluated.is_some(),
@@ -68,7 +69,8 @@ mod evaluator_test {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval(&program.environment);
+            let mut environment = Environment::new();
+            let evaluated = program.eval(&mut environment);
 
             assert!(
                 evaluated.is_some(),
@@ -101,7 +103,8 @@ mod evaluator_test {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval(&program.environment);
+            let mut environment = Environment::new();
+            let evaluated = program.eval(&mut environment);
 
             assert!(
                 evaluated.is_some(),
@@ -128,7 +131,8 @@ mod evaluator_test {
         for test_case in test_cases {
             let mut parser = Parser::from_str(test_case.0);
             let program = parser.parse_program();
-            let evaluated = program.eval(&program.environment);
+            let mut environment = Environment::new();
+            let evaluated = program.eval(&mut environment);
 
             assert!(
                 evaluated.is_some(),
@@ -309,9 +313,9 @@ mod evaluator_test {
     fn test_eval(input: &str) -> Option<Object> {
         let mut parser = Parser::from_str(input);
         let program = parser.parse_program();
-        let environment = program.environment.clone();
+        let mut environment = Environment::new();
         let program_node: Box<dyn Node> = Box::new(program);
-        return program_node.eval(&environment);
+        return program_node.eval(&mut environment);
     }
 
     fn test_integer_object(obj: Object, expected: i64) {
